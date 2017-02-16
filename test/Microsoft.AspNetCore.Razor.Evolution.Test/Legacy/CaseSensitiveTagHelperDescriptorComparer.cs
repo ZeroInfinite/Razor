@@ -29,27 +29,14 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
 
             // Normal comparer doesn't care about the case, required attribute order, allowed children order,
             // attributes or prefixes. In tests we do.
-            Assert.Equal(descriptorX.TagName, descriptorY.TagName, StringComparer.Ordinal);
-            Assert.Equal(descriptorX.Prefix, descriptorY.Prefix, StringComparer.Ordinal);
-            Assert.Equal(
-                descriptorX.RequiredAttributes,
-                descriptorY.RequiredAttributes,
-                CaseSensitiveTagHelperRequiredAttributeDescriptorComparer.Default);
-            Assert.Equal(descriptorX.RequiredParent, descriptorY.RequiredParent, StringComparer.Ordinal);
+            Assert.Equal(descriptorX.TagOutputHint, descriptorY.TagOutputHint);
+            Assert.Equal(descriptorX.BoundAttributes, descriptorY.BoundAttributes, CaseSensitiveBoundAttributeDescriptorComparer.Default);
+            Assert.Equal(descriptorX.TagMatchingRules, descriptorY.TagMatchingRules, CaseSensitiveTagMatchingRuleComparer.Default);
 
             if (descriptorX.AllowedChildTags != descriptorY.AllowedChildTags)
             {
                 Assert.Equal(descriptorX.AllowedChildTags, descriptorY.AllowedChildTags, StringComparer.Ordinal);
             }
-
-            Assert.Equal(
-                descriptorX.BoundAttributes,
-                descriptorY.BoundAttributes,
-                TagHelperAttributeDescriptorComparer.Default);
-            Assert.Equal(
-                descriptorX.DesignTimeDescriptor,
-                descriptorY.DesignTimeDescriptor,
-                TagHelperDesignTimeDescriptorComparer.Default);
 
             return true;
         }
@@ -58,19 +45,19 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
         {
             var hashCodeCombiner = HashCodeCombiner.Start();
             hashCodeCombiner.Add(base.GetHashCode(descriptor));
-            hashCodeCombiner.Add(descriptor.TagName, StringComparer.Ordinal);
-            hashCodeCombiner.Add(descriptor.Prefix, StringComparer.Ordinal);
+            hashCodeCombiner.Add(descriptor.TagOutputHint, StringComparer.Ordinal);
 
-            if (descriptor.DesignTimeDescriptor != null)
+            var orderedAttributeHashCodes = descriptor.BoundAttributes
+                .Select(attribute => CaseSensitiveBoundAttributeDescriptorComparer.Default.GetHashCode(attribute))
+                .OrderBy(hashcode => hashcode);
+            foreach (var attributeHashCode in orderedAttributeHashCodes)
             {
-                hashCodeCombiner.Add(
-                    TagHelperDesignTimeDescriptorComparer.Default.GetHashCode(descriptor.DesignTimeDescriptor));
+                hashCodeCombiner.Add(attributeHashCode);
             }
 
-            foreach (var requiredAttribute in descriptor.RequiredAttributes.OrderBy(attribute => attribute.Name))
+            foreach (var rule in descriptor.TagMatchingRules)
             {
-                hashCodeCombiner.Add(
-                    CaseSensitiveTagHelperRequiredAttributeDescriptorComparer.Default.GetHashCode(requiredAttribute));
+                hashCodeCombiner.Add(CaseSensitiveTagMatchingRuleComparer.Default.GetHashCode(rule));
             }
 
             if (descriptor.AllowedChildTags != null)
@@ -79,14 +66,6 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                 {
                     hashCodeCombiner.Add(child, StringComparer.Ordinal);
                 }
-            }
-
-            var orderedAttributeHashCodes = descriptor.BoundAttributes
-                .Select(attribute => TagHelperAttributeDescriptorComparer.Default.GetHashCode(attribute))
-                .OrderBy(hashcode => hashcode);
-            foreach (var attributeHashCode in orderedAttributeHashCodes)
-            {
-                hashCodeCombiner.Add(attributeHashCode);
             }
 
             return hashCodeCombiner.CombinedHash;

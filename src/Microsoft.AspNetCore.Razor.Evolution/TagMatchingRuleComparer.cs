@@ -17,7 +17,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         {
         }
 
-        public bool Equals(TagMatchingRule ruleX, TagMatchingRule ruleY)
+        public virtual bool Equals(TagMatchingRule ruleX, TagMatchingRule ruleY)
         {
             if (ruleX == ruleY)
             {
@@ -32,7 +32,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                 Enumerable.SequenceEqual(ruleX.Diagnostics, ruleY.Diagnostics);
         }
 
-        public int GetHashCode(TagMatchingRule rule)
+        public virtual int GetHashCode(TagMatchingRule rule)
         {
             if (rule == null)
             {

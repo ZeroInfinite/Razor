@@ -64,6 +64,14 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             return this;
         }
 
+        public TagMatchingRuleBuilder AddDiagnostic(RazorDiagnostic diagnostic)
+        {
+            EnsureDiagnostics();
+            _diagnostics.Add(diagnostic);
+
+            return this;
+        }
+
         public TagMatchingRule Build()
         {
             var rule = new DefaultTagMatchingRule(
@@ -81,6 +89,14 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             if (_requiredAttributeDescriptors == null)
             {
                 _requiredAttributeDescriptors = new List<RequiredAttributeDescriptor>();
+            }
+        }
+
+        private void EnsureDiagnostics()
+        {
+            if (_diagnostics == null)
+            {
+                _diagnostics = new List<RazorDiagnostic>();
             }
         }
 

@@ -436,7 +436,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             Assert.Equal(expectedDescriptor.FullTagName, descriptor.FullTagName, StringComparer.Ordinal);
             Assert.Equal(expectedDescriptor.TypeName, descriptor.TypeName, StringComparer.Ordinal);
             Assert.Equal(expectedDescriptor.AssemblyName, descriptor.AssemblyName, StringComparer.Ordinal);
-            Assert.Equal(expectedDescriptor.BoundAttributes, descriptor.BoundAttributes, TagHelperAttributeDescriptorComparer.Default);
+            Assert.Equal(expectedDescriptor.BoundAttributes, descriptor.BoundAttributes, CaseSensitiveBoundAttributeDescriptorComparer.Default);
             Assert.Empty(descriptor.RequiredAttributes);
             Assert.Empty(descriptor.Metadata);
         }
@@ -512,7 +512,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             Assert.Equal(expectedDescriptor.FullTagName, descriptor.FullTagName, StringComparer.Ordinal);
             Assert.Equal(expectedDescriptor.TypeName, descriptor.TypeName, StringComparer.Ordinal);
             Assert.Equal(expectedDescriptor.AssemblyName, descriptor.AssemblyName, StringComparer.Ordinal);
-            Assert.Equal(expectedDescriptor.BoundAttributes, descriptor.BoundAttributes, TagHelperAttributeDescriptorComparer.Default);
+            Assert.Equal(expectedDescriptor.BoundAttributes, descriptor.BoundAttributes, CaseSensitiveBoundAttributeDescriptorComparer.Default);
             Assert.Empty(descriptor.RequiredAttributes);
             Assert.Empty(descriptor.Metadata);
         }

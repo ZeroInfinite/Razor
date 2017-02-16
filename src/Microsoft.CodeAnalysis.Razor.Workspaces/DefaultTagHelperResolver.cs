@@ -39,7 +39,7 @@ namespace Microsoft.CodeAnalysis.Razor
 
             foreach (var type in types)
             {
-                var descriptors = factory.CreateDescriptors(type, errors);
+                var descriptors = factory.CreateDescriptor(type, errors);
                 results.AddRange(descriptors);
             }
         }

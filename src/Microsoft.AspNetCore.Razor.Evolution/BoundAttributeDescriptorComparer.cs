@@ -16,7 +16,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         {
         }
 
-        public bool Equals(BoundAttributeDescriptor descriptorX, BoundAttributeDescriptor descriptorY)
+        public virtual bool Equals(BoundAttributeDescriptor descriptorX, BoundAttributeDescriptor descriptorY)
         {
             if (descriptorX == descriptorY)
             {
@@ -39,7 +39,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                     descriptorY.Metadata.OrderBy(propertyY => propertyY.Key, StringComparer.Ordinal));
         }
 
-        public int GetHashCode(BoundAttributeDescriptor descriptor)
+        public virtual int GetHashCode(BoundAttributeDescriptor descriptor)
         {
             if (descriptor == null)
             {

@@ -61,28 +61,24 @@ namespace Microsoft.CodeAnalysis.Razor
         protected bool DesignTime { get; }
 
         /// <inheritdoc />
-        public virtual IEnumerable<TagHelperDescriptor> CreateDescriptors(
-            INamedTypeSymbol type,
-            ErrorSink errorSink)
+        public virtual TagHelperDescriptor CreateDescriptor(INamedTypeSymbol type)
         {
             if (type == null)
             {
                 throw new ArgumentNullException(nameof(type));
             }
 
-            if (errorSink == null)
-            {
-                throw new ArgumentNullException(nameof(errorSink));
-            }
-
             if (ShouldSkipDescriptorCreation(type))
             {
-                return Enumerable.Empty<TagHelperDescriptor>();
+                return null;
             }
 
-            var attributeDescriptors = GetAttributeDescriptors(type, errorSink);
-            var targetElementAttributes = GetValidHtmlTargetElementAttributes(type, errorSink);
-            var allowedChildren = GetAllowedChildren(type, errorSink);
+            var typeName = GetFullName(type);
+            var assemblyName = type.ContainingAssembly.Identity.Name;
+            var descriptorBuilder = ITagHelperDescriptorBuilder.Create(typeName, assemblyName);
+            var attributeDescriptors = AddBoundAttributes(type, descriptorBuilder);
+            var targetElementAttributes = GetValidHtmlTargetElementAttributes(type);
+            var allowedChildren = GetAllowedChildren(type);
 
             var tagHelperDescriptors =
                 BuildTagHelperDescriptors(
@@ -95,9 +91,7 @@ namespace Microsoft.CodeAnalysis.Razor
             return tagHelperDescriptors.Distinct(TagHelperDescriptorComparer.Default);
         }
 
-        private IEnumerable<AttributeData> GetValidHtmlTargetElementAttributes(
-            INamedTypeSymbol typeSymbol,
-            ErrorSink errorSink)
+        private IEnumerable<AttributeData> GetValidHtmlTargetElementAttributes(INamedTypeSymbol typeSymbol)
         {
             var targetElementAttributes = typeSymbol.GetAttributes().Where(a => a.AttributeClass == _htmlTargetElementAttributeSymbol);
             return targetElementAttributes.Where(a => ValidHtmlTargetElementAttributeNames(a, errorSink));
@@ -179,7 +173,7 @@ namespace Microsoft.CodeAnalysis.Razor
                         designTimeDescriptor));
         }
 
-        private IEnumerable<string> GetAllowedChildren(INamedTypeSymbol type, ErrorSink errorSink)
+        private IEnumerable<string> GetAllowedChildren(INamedTypeSymbol type)
         {
             var restrictChildrenAttribute = type.GetAttributes().Where(a => a.AttributeClass == _restrictChildrenAttributeSymbol).FirstOrDefault();
             if (restrictChildrenAttribute == null)
@@ -198,7 +192,7 @@ namespace Microsoft.CodeAnalysis.Razor
                 }
             }
 
-            var validAllowedChildren = GetValidAllowedChildren(allowedChildren, GetFullName(type), errorSink);
+            var validAllowedChildren = GetValidAllowedChildren(allowedChildren, GetFullName(type));
 
             if (validAllowedChildren.Any())
             {
@@ -212,10 +206,7 @@ namespace Microsoft.CodeAnalysis.Razor
         }
 
         // Internal for unit testing
-        internal static IEnumerable<string> GetValidAllowedChildren(
-            IEnumerable<string> allowedChildren,
-            string tagHelperName,
-            ErrorSink errorSink)
+        internal static IEnumerable<string> GetValidAllowedChildren(IEnumerable<string> allowedChildren, string tagHelperName)
         {
             var validAllowedChildren = new List<string>();
 
@@ -437,10 +428,7 @@ namespace Microsoft.CodeAnalysis.Razor
             return true;
         }
 
-        private static bool TryValidateName(
-            string name,
-            Func<char, string> characterErrorBuilder,
-            ErrorSink errorSink)
+        private static bool TryValidateName(string name, Func<char, string> characterErrorBuilder)
         {
             var validName = true;
 
@@ -459,13 +447,9 @@ namespace Microsoft.CodeAnalysis.Razor
             return validName;
         }
 
-        private IEnumerable<BoundAttributeDescriptor> GetAttributeDescriptors(INamedTypeSymbol type, ErrorSink errorSink)
+        private IEnumerable<BoundAttributeDescriptor> AddBoundAttributes(INamedTypeSymbol type, ITagHelperDescriptorBuilder builder)
         {
-            var attributeDescriptors = new List<BoundAttributeDescriptor>();
-
-            // Keep indexer descriptors separate to avoid sorting the combined list later.
-            var indexerDescriptors = new List<BoundAttributeDescriptor>();
-
+            var containingTypeName = GetFullName(type);
             var accessibleProperties = GetAccessibleProperties(type);
             foreach (var property in accessibleProperties)
             {
@@ -494,38 +478,186 @@ namespace Microsoft.CodeAnalysis.Razor
                     attributeName = (string)attributeNameAttribute.ConstructorArguments[0].Value;
                 }
 
+                var attributeBuilder = ITagHelperBoundAttributeDescriptorBuilder.Create(containingTypeName);
                 BoundAttributeDescriptor mainDescriptor = null;
                 if (property.SetMethod != null && property.SetMethod.DeclaredAccessibility == Accessibility.Public)
                 {
                     mainDescriptor = ToAttributeDescriptor(property, attributeName);
-                    if (!ValidateTagHelperAttributeDescriptor(mainDescriptor, type, errorSink))
+
+                    var typeName = GetFullName(property.Type);
+                    attributeBuilder
+                        .Name(attributeName)
+                        .PropertyName(property.Name)
+                        .TypeName(typeName);
+
+                    if (property.Type.TypeKind == TypeKind.Enum)
                     {
-                        // HtmlAttributeNameAttribute.Name is invalid. Ignore this property completely.
-                        continue;
+                        attributeBuilder.AsEnum();
+                    }
+
+                    if (DesignTime)
+                    {
+                        var xml = property.GetDocumentationCommentXml();
+
+                        attributeBuilder.Documentation(xml);
                     }
                 }
                 else if (hasExplicitName)
                 {
                     // Specified HtmlAttributeNameAttribute.Name though property has no public setter.
-                    errorSink.OnError(
-                        SourceLocation.Zero,
-                        Resources.FormatTagHelperDescriptorFactory_InvalidAttributeNameNotNullOrEmpty(
-                            GetFullName(type),
-                            property.Name,
-                            TagHelperTypes.HtmlAttributeNameAttribute,
-                            TagHelperTypes.HtmlAttributeName.Name),
-                        length: 0);
-                    continue;
+                    var diagnosticDescriptor = new RazorDiagnosticDescriptor(
+                        "TODO: Track IDS",
+                        () => Resources.TagHelperDescriptorFactory_InvalidAttributeNameNotNullOrEmpty,
+                        RazorDiagnosticSeverity.Error);
+                    var diagnostic = RazorDiagnostic.Create(
+                        diagnosticDescriptor,
+                        new SourceSpan(SourceLocation.Undefined, contentLength: 0),
+                        GetFullName(type),
+                        property.Name,
+                        TagHelperTypes.HtmlAttributeNameAttribute,
+                        TagHelperTypes.HtmlAttributeName.Name);
+                    attributeBuilder.AddDiagnostic(diagnostic);
                 }
 
                 bool isInvalid;
                 var indexerDescriptor = ToIndexerAttributeDescriptor(
+                    defaultPrefix: attributeName + "-");
+
+                isInvalid = false;
+                var hasPublicSetter = property.SetMethod != null && property.SetMethod.DeclaredAccessibility == Accessibility.Public;
+
+
+                string dictionaryAttributePrefix = null;
+                bool dictionaryAttributePrefixSet = false;
+
+                if (attributeNameAttribute != null)
+                {
+                    foreach (var argument in attributeNameAttribute.NamedArguments)
+                    {
+                        if (argument.Key == TagHelperTypes.HtmlAttributeName.DictionaryAttributePrefix)
+                        {
+                            dictionaryAttributePrefix = (string)argument.Value.Value;
+                            dictionaryAttributePrefixSet = true;
+                            break;
+                        }
+                    }
+                }
+
+                INamedTypeSymbol dictionaryType;
+                if ((property.Type as INamedTypeSymbol)?.ConstructedFrom == _iDictionarySymbol)
+                {
+                    dictionaryType = (INamedTypeSymbol)property.Type;
+                }
+                else if (property.Type.AllInterfaces.Any(s => s.ConstructedFrom == _iDictionarySymbol))
+                {
+                    dictionaryType = property.Type.AllInterfaces.First(s => s.ConstructedFrom == _iDictionarySymbol);
+                }
+                else
+                {
+                    dictionaryType = null;
+                }
+
+                if (dictionaryType == null ||
+                    dictionaryType.TypeArguments[0].SpecialType != SpecialType.System_String)
+                {
+                    if (dictionaryAttributePrefix != null)
+                    {
+                        // DictionaryAttributePrefix is not supported unless associated with an
+                        // IDictionary<string, TValue> property.
+                        var diagnosticDescriptor = new RazorDiagnosticDescriptor(
+                            "TODO: Track IDS",
+                            () => Resources.TagHelperDescriptorFactory_InvalidAttributePrefixNotNull,
+                            RazorDiagnosticSeverity.Error);
+                        var diagnostic = RazorDiagnostic.Create(
+                            diagnosticDescriptor,
+                            new SourceSpan(SourceLocation.Undefined, contentLength: 0),
+                            GetFullName(type),
+                            property.Name,
+                            TagHelperTypes.HtmlAttributeNameAttribute,
+                            TagHelperTypes.HtmlAttributeName.DictionaryAttributePrefix,
+                            "IDictionary<string, TValue>");
+                        attributeBuilder.AddDiagnostic(diagnostic);
+                        isInvalid = true;
+                    }
+
+                    return null;
+                }
+                else if (!hasPublicSetter && attributeNameAttribute != null && !dictionaryAttributePrefixSet)
+                {
+                    // Must set DictionaryAttributePrefix when using HtmlAttributeNameAttribute with a dictionary property
+                    // that lacks a public setter.
+                    var diagnosticDescriptor = new RazorDiagnosticDescriptor(
+                        "TODO: Track IDS",
+                        () => Resources.TagHelperDescriptorFactory_InvalidAttributePrefixNull,
+                        RazorDiagnosticSeverity.Error);
+                    var diagnostic = RazorDiagnostic.Create(
+                        diagnosticDescriptor,
+                        new SourceSpan(SourceLocation.Undefined, contentLength: 0),
+                        GetFullName(type),
+                        property.Name,
+                        TagHelperTypes.HtmlAttributeNameAttribute,
+                        TagHelperTypes.HtmlAttributeName.DictionaryAttributePrefix,
+                        "IDictionary<string, TValue>");
+                    attributeBuilder.AddDiagnostic(diagnostic);
+                    isInvalid = true;
+
+                    return null;
+                }
+
+                // Potential prefix case. Use default prefix (based on name)?
+                var useDefault = attributeNameAttribute == null || !dictionaryAttributePrefixSet;
+
+                var prefix = useDefault ? attributeName + "-" : dictionaryAttributePrefix;
+                if (prefix == null)
+                {
+                    // DictionaryAttributePrefix explicitly set to null. Ignore.
+                    return null;
+                }
+
+                // TODO: HERE"S WHERE I WAS
+
+                return ToAttributeDescriptor(
                     property,
-                    attributeNameAttribute,
-                    parentType: type,
-                    errorSink: errorSink,
-                    defaultPrefix: attributeName + "-",
-                    isInvalid: out isInvalid);
+                    attributeName: prefix,
+                    typeName: dictionaryType == null ? null : GetFullName(dictionaryType.TypeArguments[1]),
+                    isIndexer: true,
+                    isStringProperty: dictionaryType == null ? false : dictionaryType.TypeArguments[1].SpecialType == SpecialType.System_String);
+
+                TagHelperAttributeDesignTimeDescriptor designTimeDescriptor = null;
+                if (DesignTime)
+                {
+                    XmlMemberDocumentation documentation = null;
+                    var xml = property.GetDocumentationCommentXml();
+                    if (!string.IsNullOrEmpty(xml))
+                    {
+                        documentation = new XmlMemberDocumentation(xml);
+                    }
+
+                    var remarks = documentation?.GetRemarks();
+                    var summary = documentation?.GetSummary();
+                    if (summary != null || remarks != null)
+                    {
+                        designTimeDescriptor = new TagHelperAttributeDesignTimeDescriptor()
+                        {
+                            Remarks = remarks,
+                            Summary = summary,
+                        };
+                    }
+                }
+
+                return new BoundAttributeDescriptor
+                {
+                    Name = attributeName,
+                    PropertyName = property.Name,
+                    IsEnum = property.Type.TypeKind == TypeKind.Enum,
+                    TypeName = typeName,
+                    IsStringProperty = isStringProperty,
+                    IsIndexer = isIndexer,
+                    DesignTimeDescriptor = designTimeDescriptor,
+                };
+
+
+
                 if (indexerDescriptor != null &&
                     !ValidateTagHelperAttributeDescriptor(indexerDescriptor, type, errorSink))
                 {
@@ -705,112 +837,7 @@ namespace Microsoft.CodeAnalysis.Razor
             string defaultPrefix,
             out bool isInvalid)
         {
-            isInvalid = false;
-            var hasPublicSetter = property.SetMethod != null && property.SetMethod.DeclaredAccessibility == Accessibility.Public;
-
-
-            string dictionaryAttributePrefix = null;
-            bool dictionaryAttributePrefixSet = false;
-
-            if (attributeNameAttribute != null)
-            {
-                foreach (var argument in attributeNameAttribute.NamedArguments)
-                {
-                    if (argument.Key == TagHelperTypes.HtmlAttributeName.DictionaryAttributePrefix)
-                    {
-                        dictionaryAttributePrefix = (string)argument.Value.Value;
-                        dictionaryAttributePrefixSet = true;
-                        break;
-                    }
-                }
-            }
-
-            INamedTypeSymbol dictionaryType;
-            if ((property.Type as INamedTypeSymbol)?.ConstructedFrom == _iDictionarySymbol)
-            {
-                dictionaryType = (INamedTypeSymbol)property.Type;
-            }
-            else if (property.Type.AllInterfaces.Any(s => s.ConstructedFrom == _iDictionarySymbol))
-            {
-                dictionaryType = property.Type.AllInterfaces.First(s => s.ConstructedFrom == _iDictionarySymbol);
-            }
-            else
-            {
-                dictionaryType = null;
-            }
-
-            if (dictionaryType == null ||
-                dictionaryType.TypeArguments[0].SpecialType != SpecialType.System_String)
-            {
-                if (dictionaryAttributePrefix != null)
-                {
-                    // DictionaryAttributePrefix is not supported unless associated with an
-                    // IDictionary<string, TValue> property.
-                    isInvalid = true;
-                    errorSink.OnError(
-                        SourceLocation.Zero,
-                        Resources.FormatTagHelperDescriptorFactory_InvalidAttributePrefixNotNull(
-                            GetFullName(parentType),
-                            property.Name,
-                            TagHelperTypes.HtmlAttributeNameAttribute,
-                            TagHelperTypes.HtmlAttributeName.DictionaryAttributePrefix,
-                            "IDictionary<string, TValue>"),
-                        length: 0);
-                }
-                else if (attributeNameAttribute != null && !hasPublicSetter)
-                {
-                    // Associated an HtmlAttributeNameAttribute with a non-dictionary property that lacks a public
-                    // setter.
-                    isInvalid = true;
-                    errorSink.OnError(
-                        SourceLocation.Zero,
-                        Resources.FormatTagHelperDescriptorFactory_InvalidAttributeNameAttribute(
-                            GetFullName(parentType),
-                            property.Name,
-                            TagHelperTypes.HtmlAttributeNameAttribute,
-                            "IDictionary<string, TValue>"),
-                        length: 0);
-                }
-
-                return null;
-            }
-            else if (
-                !hasPublicSetter &&
-                attributeNameAttribute != null &&
-                !dictionaryAttributePrefixSet)
-            {
-                // Must set DictionaryAttributePrefix when using HtmlAttributeNameAttribute with a dictionary property
-                // that lacks a public setter.
-                isInvalid = true;
-                errorSink.OnError(
-                    SourceLocation.Zero,
-                    Resources.FormatTagHelperDescriptorFactory_InvalidAttributePrefixNull(
-                        GetFullName(parentType),
-                        property.Name,
-                        TagHelperTypes.HtmlAttributeNameAttribute,
-                        TagHelperTypes.HtmlAttributeName.DictionaryAttributePrefix,
-                        "IDictionary<string, TValue>"),
-                    length: 0);
-
-                return null;
-            }
-
-            // Potential prefix case. Use default prefix (based on name)?
-            var useDefault = attributeNameAttribute == null || !dictionaryAttributePrefixSet;
-
-            var prefix = useDefault ? defaultPrefix : dictionaryAttributePrefix;
-            if (prefix == null)
-            {
-                // DictionaryAttributePrefix explicitly set to null. Ignore.
-                return null;
-            }
-
-            return ToAttributeDescriptor(
-                property,
-                attributeName: prefix,
-                typeName: dictionaryType == null ? null : GetFullName(dictionaryType.TypeArguments[1]),
-                isIndexer: true,
-                isStringProperty: dictionaryType == null ? false : dictionaryType.TypeArguments[1].SpecialType == SpecialType.System_String);
+            
         }
 
         private BoundAttributeDescriptor ToAttributeDescriptor(
@@ -820,38 +847,7 @@ namespace Microsoft.CodeAnalysis.Razor
             bool isIndexer,
             bool isStringProperty)
         {
-            TagHelperAttributeDesignTimeDescriptor designTimeDescriptor = null;
-            if (DesignTime)
-            {
-                XmlMemberDocumentation documentation = null;
-                var xml = property.GetDocumentationCommentXml();
-                if (!string.IsNullOrEmpty(xml))
-                {
-                    documentation = new XmlMemberDocumentation(xml);
-                }
-
-                var remarks = documentation?.GetRemarks();
-                var summary = documentation?.GetSummary();
-                if (summary != null || remarks != null)
-                {
-                    designTimeDescriptor = new TagHelperAttributeDesignTimeDescriptor()
-                    {
-                        Remarks = remarks,
-                        Summary = summary,
-                    };
-                }
-            }
-
-            return new BoundAttributeDescriptor
-            {
-                Name = attributeName,
-                PropertyName = property.Name,
-                IsEnum = property.Type.TypeKind == TypeKind.Enum,
-                TypeName = typeName,
-                IsStringProperty = isStringProperty,
-                IsIndexer = isIndexer,
-                DesignTimeDescriptor = designTimeDescriptor,
-            };
+            
         }
 
         private bool ShouldSkipDescriptorCreation(ISymbol symbol)

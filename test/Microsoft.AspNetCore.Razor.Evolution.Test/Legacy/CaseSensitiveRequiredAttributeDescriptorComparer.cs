@@ -7,12 +7,12 @@ using Xunit;
 
 namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
 {
-    internal class CaseSensitiveTagHelperRequiredAttributeDescriptorComparer : TagHelperRequiredAttributeDescriptorComparer
+    internal class CaseSensitiveRequiredAttributeDescriptorComparer : RequiredAttributeDescriptorComparer
     {
-        public new static readonly CaseSensitiveTagHelperRequiredAttributeDescriptorComparer Default =
-            new CaseSensitiveTagHelperRequiredAttributeDescriptorComparer();
+        public new static readonly CaseSensitiveRequiredAttributeDescriptorComparer Default =
+            new CaseSensitiveRequiredAttributeDescriptorComparer();
 
-        private CaseSensitiveTagHelperRequiredAttributeDescriptorComparer()
+        private CaseSensitiveRequiredAttributeDescriptorComparer()
             : base()
         {
         }

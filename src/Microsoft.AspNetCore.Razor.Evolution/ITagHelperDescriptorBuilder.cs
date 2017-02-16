@@ -101,6 +101,14 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             return this;
         }
 
+        public ITagHelperDescriptorBuilder AddDiagnostic(RazorDiagnostic diagnostic)
+        {
+            EnsureDiagnostics();
+            _diagnostics.Add(diagnostic);
+
+            return this;
+        }
+
         public TagHelperDescriptor Build()
         {
             var descriptor = new ITagHelperDescriptor(
@@ -140,6 +148,14 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             if (_allowedChildTags == null)
             {
                 _allowedChildTags = new List<string>();
+            }
+        }
+
+        private void EnsureDiagnostics()
+        {
+            if (_diagnostics == null)
+            {
+                _diagnostics = new List<RazorDiagnostic>();
             }
         }
 

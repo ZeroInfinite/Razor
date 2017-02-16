@@ -52,6 +52,14 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             return this;
         }
 
+        public RequiredAttributeDescriptorBuilder AddDiagnostic(RazorDiagnostic diagnostic)
+        {
+            EnsureDiagnostics();
+            _diagnostics.Add(diagnostic);
+
+            return this;
+        }
+
         public RequiredAttributeDescriptor Build()
         {
             var rule = new DefaultTagHelperRequiredAttributeDescriptor(
@@ -62,6 +70,14 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                 _diagnostics ?? Enumerable.Empty<RazorDiagnostic>());
 
             return rule;
+        }
+
+        private void EnsureDiagnostics()
+        {
+            if (_diagnostics == null)
+            {
+                _diagnostics = new List<RazorDiagnostic>();
+            }
         }
 
         private class DefaultTagHelperRequiredAttributeDescriptor : RequiredAttributeDescriptor
