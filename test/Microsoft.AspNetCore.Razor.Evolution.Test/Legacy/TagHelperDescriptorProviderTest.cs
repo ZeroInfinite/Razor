@@ -82,7 +82,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             var provider = new TagHelperDescriptorProvider((IEnumerable<TagHelperDescriptor>)availableDescriptors);
 
             // Act
-            var resolvedDescriptors = provider.GetDescriptors(
+            var resolvedDescriptors = provider.GetTagHelperBinding(
                 tagName,
                 attributes: Enumerable.Empty<KeyValuePair<string, string>>(),
                 parentTagName: parentTagName);
@@ -100,7 +100,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                     TagName = "div",
                     TypeName = "DivTagHelper",
                     AssemblyName = "SomeAssembly",
-                    RequiredAttributes = new[] { new TagHelperRequiredAttributeDescriptor { Name = "style" } }
+                    RequiredAttributes = new[] { new RequiredAttributeDescriptor { Name = "style" } }
                 };
                 var inputDescriptor = new TagHelperDescriptor
                 {
@@ -109,8 +109,8 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                     AssemblyName = "SomeAssembly",
                     RequiredAttributes = new[]
                     {
-                        new TagHelperRequiredAttributeDescriptor { Name = "class" },
-                        new TagHelperRequiredAttributeDescriptor { Name = "style" }
+                        new RequiredAttributeDescriptor { Name = "class" },
+                        new RequiredAttributeDescriptor { Name = "style" }
                     }
                 };
                 var inputWildcardPrefixDescriptor = new TagHelperDescriptor
@@ -120,7 +120,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                     AssemblyName = "SomeAssembly",
                     RequiredAttributes = new[]
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "nodashprefix",
                             NameComparison = TagHelperRequiredAttributeNameComparison.PrefixMatch,
@@ -132,7 +132,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                     TagName = TagHelperDescriptorProvider.ElementCatchAllTarget,
                     TypeName = "CatchAllTagHelper",
                     AssemblyName = "SomeAssembly",
-                    RequiredAttributes = new[] { new TagHelperRequiredAttributeDescriptor { Name = "class" } }
+                    RequiredAttributes = new[] { new RequiredAttributeDescriptor { Name = "class" } }
                 };
                 var catchAllDescriptor2 = new TagHelperDescriptor
                 {
@@ -141,8 +141,8 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                     AssemblyName = "SomeAssembly",
                     RequiredAttributes = new[]
                     {
-                        new TagHelperRequiredAttributeDescriptor { Name = "custom" },
-                        new TagHelperRequiredAttributeDescriptor { Name = "class" }
+                        new RequiredAttributeDescriptor { Name = "custom" },
+                        new RequiredAttributeDescriptor { Name = "class" }
                     }
                 };
                 var catchAllWildcardPrefixDescriptor = new TagHelperDescriptor
@@ -152,7 +152,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                     AssemblyName = "SomeAssembly",
                     RequiredAttributes = new[]
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "prefix-",
                             NameComparison = TagHelperRequiredAttributeNameComparison.PrefixMatch,
@@ -268,7 +268,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             var provider = new TagHelperDescriptorProvider((IEnumerable<TagHelperDescriptor>)availableDescriptors);
 
             // Act
-            var resolvedDescriptors = provider.GetDescriptors(tagName, providedAttributes, parentTagName: "p").ToArray();
+            var resolvedDescriptors = provider.GetTagHelperBinding(tagName, providedAttributes, parentTagName: "p").ToArray();
 
             // Assert
             Assert.Equal((IEnumerable<TagHelperDescriptor>)expectedDescriptors, resolvedDescriptors, CaseSensitiveTagHelperDescriptorComparer.Default);
@@ -286,7 +286,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             var provider = new TagHelperDescriptorProvider(descriptors);
 
             // Act
-            var resolvedDescriptors = provider.GetDescriptors(
+            var resolvedDescriptors = provider.GetTagHelperBinding(
                 tagName: "th",
                 attributes: Enumerable.Empty<KeyValuePair<string, string>>(),
                 parentTagName: "p");
@@ -306,9 +306,9 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         AssemblyName = "TestAssembly",
                         TagName = "form",
                         TypeName = "TestFormTagHelper",
-                        RequiredAttributes = new List<TagHelperRequiredAttributeDescriptor>()
+                        RequiredAttributes = new List<RequiredAttributeDescriptor>()
                         {
-                             new TagHelperRequiredAttributeDescriptor()
+                             new RequiredAttributeDescriptor()
                              {
                                  Name = "a",
                                  NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch
@@ -320,9 +320,9 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         AssemblyName = "TestAssembly",
                         TagName = "form",
                         TypeName = "TestFormTagHelper",
-                        RequiredAttributes = new List<TagHelperRequiredAttributeDescriptor>()
+                        RequiredAttributes = new List<RequiredAttributeDescriptor>()
                         {
-                             new TagHelperRequiredAttributeDescriptor()
+                             new RequiredAttributeDescriptor()
                              {
                                  Name = "b",
                                  NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch
@@ -333,7 +333,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             var provider = new TagHelperDescriptorProvider(descriptors);
 
             // Act
-            var resolvedDescriptors = provider.GetDescriptors(
+            var resolvedDescriptors = provider.GetTagHelperBinding(
                 tagName: "form",
                 attributes: new List<KeyValuePair<string, string>>()
                 {
@@ -356,11 +356,11 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             var provider = new TagHelperDescriptorProvider(descriptors);
 
             // Act
-            var retrievedDescriptorsDiv = provider.GetDescriptors(
+            var retrievedDescriptorsDiv = provider.GetTagHelperBinding(
                 tagName: "th:div",
                 attributes: Enumerable.Empty<KeyValuePair<string, string>>(),
                 parentTagName: "p");
-            var retrievedDescriptorsSpan = provider.GetDescriptors(
+            var retrievedDescriptorsSpan = provider.GetTagHelperBinding(
                 tagName: "th2:span",
                 attributes: Enumerable.Empty<KeyValuePair<string, string>>(),
                 parentTagName: "p");
@@ -380,11 +380,11 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             var provider = new TagHelperDescriptorProvider(descriptors);
 
             // Act
-            var retrievedDescriptorsDiv = provider.GetDescriptors(
+            var retrievedDescriptorsDiv = provider.GetTagHelperBinding(
                 tagName: "th:div",
                 attributes: Enumerable.Empty<KeyValuePair<string, string>>(),
                 parentTagName: "p");
-            var retrievedDescriptorsSpan = provider.GetDescriptors(
+            var retrievedDescriptorsSpan = provider.GetTagHelperBinding(
                 tagName: "th:span",
                 attributes: Enumerable.Empty<KeyValuePair<string, string>>(),
                 parentTagName: "p");
@@ -405,7 +405,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             var provider = new TagHelperDescriptorProvider(descriptors);
 
             // Act
-            var retrievedDescriptors = provider.GetDescriptors(
+            var retrievedDescriptors = provider.GetTagHelperBinding(
                 tagName: "th:div",
                 attributes: Enumerable.Empty<KeyValuePair<string, string>>(),
                 parentTagName: "p");
@@ -426,7 +426,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             var provider = new TagHelperDescriptorProvider(descriptors);
 
             // Act
-            var retrievedDescriptorsDiv = provider.GetDescriptors(
+            var retrievedDescriptorsDiv = provider.GetTagHelperBinding(
                 tagName: "div",
                 attributes: Enumerable.Empty<KeyValuePair<string, string>>(),
                 parentTagName: "p");
@@ -455,7 +455,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             var provider = new TagHelperDescriptorProvider(descriptors);
 
             // Act
-            var retrievedDescriptors = provider.GetDescriptors(
+            var retrievedDescriptors = provider.GetTagHelperBinding(
                 tagName: "foo",
                 attributes: Enumerable.Empty<KeyValuePair<string, string>>(),
                 parentTagName: "p");
@@ -490,11 +490,11 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             var provider = new TagHelperDescriptorProvider(descriptors);
 
             // Act
-            var divDescriptors = provider.GetDescriptors(
+            var divDescriptors = provider.GetTagHelperBinding(
                 tagName: "div",
                 attributes: Enumerable.Empty<KeyValuePair<string, string>>(),
                 parentTagName: "p");
-            var spanDescriptors = provider.GetDescriptors(
+            var spanDescriptors = provider.GetTagHelperBinding(
                 tagName: "span",
                 attributes: Enumerable.Empty<KeyValuePair<string, string>>(),
                 parentTagName: "p");
@@ -525,7 +525,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             var provider = new TagHelperDescriptorProvider(descriptors);
 
             // Act
-            var retrievedDescriptors = provider.GetDescriptors(
+            var retrievedDescriptors = provider.GetTagHelperBinding(
                 tagName: "div",
                 attributes: Enumerable.Empty<KeyValuePair<string, string>>(),
                 parentTagName: "p");

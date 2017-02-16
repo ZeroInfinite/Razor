@@ -23,34 +23,34 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                 TagName = "vc:string-parameter",
                 TypeName = "__Generated__StringParameterViewComponentTagHelper",
                 AssemblyName = typeof(StringParameterViewComponent).Assembly.GetName().Name,
-                Attributes = new List<TagHelperAttributeDescriptor>
+                Attributes = new List<BoundAttributeDescriptor>
                 {
-                    new TagHelperAttributeDescriptor
+                    new BoundAttributeDescriptor
                     {
                         Name = "foo",
                         PropertyName = "foo",
                         TypeName = typeof(string).FullName
                     },
-                    new TagHelperAttributeDescriptor
+                    new BoundAttributeDescriptor
                     {
                         Name = "bar",
                         PropertyName = "bar",
                         TypeName = typeof(string).FullName
                     }
                 },
-                RequiredAttributes = new List<TagHelperRequiredAttributeDescriptor>
+                RequiredAttributes = new List<RequiredAttributeDescriptor>
                 {
-                    new TagHelperRequiredAttributeDescriptor
+                    new RequiredAttributeDescriptor
                     {
                         Name = "foo"
                     },
-                    new TagHelperRequiredAttributeDescriptor
+                    new RequiredAttributeDescriptor
                     {
                         Name = "bar"
                     }
                 }
             };
-            expectedDescriptor.PropertyBag.Add(ViewComponentTypes.ViewComponentNameKey, "StringParameter");
+            expectedDescriptor.Metadata.Add(ViewComponentTypes.ViewComponentNameKey, "StringParameter");
 
             // Act
             var descriptor = factory.CreateDescriptor(viewComponent);
@@ -71,9 +71,9 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                 TagName = "vc:various-parameter",
                 TypeName = "__Generated__VariousParameterViewComponentTagHelper",
                 AssemblyName = typeof(VariousParameterViewComponent).Assembly.GetName().Name,
-                Attributes = new List<TagHelperAttributeDescriptor>
+                Attributes = new List<BoundAttributeDescriptor>
                 {
-                    new TagHelperAttributeDescriptor
+                    new BoundAttributeDescriptor
                     {
                         Name = "test-enum",
                         PropertyName = "testEnum",
@@ -81,39 +81,39 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                         IsEnum = true
                     },
 
-                    new TagHelperAttributeDescriptor
+                    new BoundAttributeDescriptor
                     {
                         Name = "test-string",
                         PropertyName = "testString",
                         TypeName = typeof(string).FullName
                     },
 
-                    new TagHelperAttributeDescriptor
+                    new BoundAttributeDescriptor
                     {
                         Name = "baz",
                         PropertyName = "baz",
                         TypeName = typeof(int).FullName
                     }
                 },
-                RequiredAttributes = new List<TagHelperRequiredAttributeDescriptor>
+                RequiredAttributes = new List<RequiredAttributeDescriptor>
                 {
-                    new TagHelperRequiredAttributeDescriptor
+                    new RequiredAttributeDescriptor
                     {
                         Name = "test-enum"
                     },
 
-                    new TagHelperRequiredAttributeDescriptor
+                    new RequiredAttributeDescriptor
                     {
                         Name = "test-string"
                     },
 
-                    new TagHelperRequiredAttributeDescriptor
+                    new RequiredAttributeDescriptor
                     {
                         Name = "baz"
                     }
                 }
             };
-            expectedDescriptor.PropertyBag.Add(ViewComponentTypes.ViewComponentNameKey, "VariousParameter");
+            expectedDescriptor.Metadata.Add(ViewComponentTypes.ViewComponentNameKey, "VariousParameter");
 
             // Act
             var descriptor = factory.CreateDescriptor(viewComponent);
@@ -134,23 +134,23 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                 TagName = "vc:generic-parameter",
                 TypeName = "__Generated__GenericParameterViewComponentTagHelper",
                 AssemblyName = typeof(GenericParameterViewComponent).Assembly.GetName().Name,
-                Attributes = new List<TagHelperAttributeDescriptor>
+                Attributes = new List<BoundAttributeDescriptor>
                 {
-                    new TagHelperAttributeDescriptor
+                    new BoundAttributeDescriptor
                     {
                         Name = "foo",
                         PropertyName = "Foo",
                         TypeName = "System.Collections.Generic.List<System.String>"
                     },
 
-                    new TagHelperAttributeDescriptor
+                    new BoundAttributeDescriptor
                     {
                         Name = "bar",
                         PropertyName = "Bar",
                         TypeName = "System.Collections.Generic.Dictionary<System.String, System.Int32>"
                     },
 
-                    new TagHelperAttributeDescriptor
+                    new BoundAttributeDescriptor
                     {
                         Name = "bar-",
                         PropertyName = "Bar",
@@ -158,15 +158,15 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                         IsIndexer = true
                     }
                 },
-                RequiredAttributes = new List<TagHelperRequiredAttributeDescriptor>
+                RequiredAttributes = new List<RequiredAttributeDescriptor>
                 {
-                    new TagHelperRequiredAttributeDescriptor
+                    new RequiredAttributeDescriptor
                     {
                         Name = "foo"
                     }
                 }
             };
-            expectedDescriptor.PropertyBag.Add(ViewComponentTypes.ViewComponentNameKey, "GenericParameter");
+            expectedDescriptor.Metadata.Add(ViewComponentTypes.ViewComponentNameKey, "GenericParameter");
 
             // Act
             var descriptor = factory.CreateDescriptor(viewComponent);

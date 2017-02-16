@@ -46,7 +46,7 @@ namespace Microsoft.CodeAnalysis.Razor
 
             SetAttributeDescriptors(type, descriptor);
 
-            descriptor.PropertyBag.Add(ViewComponentTypes.ViewComponentNameKey, shortName);
+            descriptor.Metadata.Add(ViewComponentTypes.ViewComponentNameKey, shortName);
 
             return descriptor;
         }
@@ -54,15 +54,15 @@ namespace Microsoft.CodeAnalysis.Razor
         private void SetAttributeDescriptors(INamedTypeSymbol type, TagHelperDescriptor descriptor)
         {
             var methodParameters = GetInvokeMethodParameters(type);
-            var attributeDescriptors = new List<TagHelperAttributeDescriptor>();
-            var indexerDescriptors = new List<TagHelperAttributeDescriptor>();
-            var requiredAttributeDescriptors = new List<TagHelperRequiredAttributeDescriptor>();
+            var attributeDescriptors = new List<BoundAttributeDescriptor>();
+            var indexerDescriptors = new List<BoundAttributeDescriptor>();
+            var requiredAttributeDescriptors = new List<RequiredAttributeDescriptor>();
 
             foreach (var parameter in methodParameters)
             {
                 var lowerKebabName = DefaultTagHelperDescriptorFactory.ToHtmlCase(parameter.Name);
                 var typeName = parameter.Type.ToDisplayString(FullNameTypeDisplayFormat);
-                var attributeDescriptor = new TagHelperAttributeDescriptor
+                var attributeDescriptor = new BoundAttributeDescriptor
                 {
                     Name = lowerKebabName,
                     PropertyName = parameter.Name,
@@ -83,7 +83,7 @@ namespace Microsoft.CodeAnalysis.Razor
                 {
                     // Set required attributes only for non-indexer attributes. Indexer attributes can't be required attributes
                     // because there are two ways of setting values for the attribute.
-                    requiredAttributeDescriptors.Add(new TagHelperRequiredAttributeDescriptor
+                    requiredAttributeDescriptors.Add(new RequiredAttributeDescriptor
                     {
                         Name = lowerKebabName
                     });
@@ -95,7 +95,7 @@ namespace Microsoft.CodeAnalysis.Razor
             descriptor.RequiredAttributes = requiredAttributeDescriptors;
         }
 
-        private TagHelperAttributeDescriptor GetIndexerAttributeDescriptor(IParameterSymbol parameter, string name)
+        private BoundAttributeDescriptor GetIndexerAttributeDescriptor(IParameterSymbol parameter, string name)
         {
             INamedTypeSymbol dictionaryType;
             if ((parameter.Type as INamedTypeSymbol)?.ConstructedFrom == _iDictionarySymbol)
@@ -117,7 +117,7 @@ namespace Microsoft.CodeAnalysis.Razor
             }
 
             var type = dictionaryType.TypeArguments[1];
-            var descriptor = new TagHelperAttributeDescriptor
+            var descriptor = new BoundAttributeDescriptor
             {
                 Name = name + "-",
                 PropertyName = parameter.Name,

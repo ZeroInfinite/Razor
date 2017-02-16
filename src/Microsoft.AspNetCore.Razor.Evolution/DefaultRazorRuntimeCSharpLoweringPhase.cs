@@ -432,17 +432,18 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             {
                 var tagHelperVariableName = GetTagHelperVariableName(node.TagHelperTypeName);
                 var tagHelperRenderingContext = Context.TagHelperRenderingContext;
+                var propertyName = node.Descriptor.Metadata[ITagHelperBoundAttributeDescriptorBuilder.PropertyNameKey];
 
                 // Ensure that the property we're trying to set has initialized its dictionary bound properties.
-                if (node.Descriptor.IsIndexer &&
-                    tagHelperRenderingContext.VerifiedPropertyDictionaries.Add(node.Descriptor.PropertyName))
+                if (node.Descriptor.KeyValueAttributeNamePrefix != null &&
+                    tagHelperRenderingContext.VerifiedPropertyDictionaries.Add(propertyName))
                 {
                     // Throw a reasonable Exception at runtime if the dictionary property is null.
                     Context.Writer
                         .Write("if (")
                         .Write(tagHelperVariableName)
                         .Write(".")
-                        .Write(node.Descriptor.PropertyName)
+                        .Write(propertyName)
                         .WriteLine(" == null)");
                     using (Context.Writer.BuildScope())
                     {
@@ -456,7 +457,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                             .WriteParameterSeparator()
                             .WriteStringLiteral(node.TagHelperTypeName)
                             .WriteParameterSeparator()
-                            .WriteStringLiteral(node.Descriptor.PropertyName)
+                            .WriteStringLiteral(propertyName)
                             .WriteEndMethodInvocation(endLine: false)   // End of method call
                             .WriteEndMethodInvocation();   // End of new expression / throw statement
                     }

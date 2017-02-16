@@ -17,23 +17,25 @@ namespace Microsoft.AspNetCore.Razor.Evolution
 
         public string Kind { get; }
 
-        public IEnumerable<CorrelationRule> CorrelationRules { get; protected set; }
+        public string Name { get; protected set; }
+
+        public IEnumerable<TagMatchingRule> TagMatchingRules { get; protected set; }
 
         public string AssemblyName { get; protected set; }
 
-        public IEnumerable<TagHelperAttributeDescriptor> Attributes { get; protected set; }
+        public IEnumerable<BoundAttributeDescriptor> BoundAttributes { get; protected set; }
 
-        public IEnumerable<string> AllowedChildren { get; protected set; }
-
-        public IReadOnlyDictionary<string, string> PropertyBag { get; protected set; }
-
-        public string DisplayName { get; protected set; }
+        public IEnumerable<string> AllowedChildTags { get; protected set; }
 
         public string Documentation { get; protected set; }
 
-        public string OutputElementHint { get; protected set; }
+        public string DisplayName { get; protected set; }
+
+        public string TagOutputHint { get; protected set; }
 
         public IEnumerable<RazorDiagnostic> Diagnostics { get; protected set; }
+
+        public IReadOnlyDictionary<string, string> Metadata { get; protected set; }
 
         public bool HasAnyErrors
         {
@@ -50,8 +52,8 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         {
             if (_allDiagnostics == null)
             {
-                var attributeErrors = Attributes.SelectMany(attribute => attribute.Diagnostics);
-                var ruleErrors = CorrelationRules.SelectMany(rule => rule.GetAllDiagnostics());
+                var attributeErrors = BoundAttributes.SelectMany(attribute => attribute.Diagnostics);
+                var ruleErrors = TagMatchingRules .SelectMany(rule => rule.GetAllDiagnostics());
                 var combinedDiagnostics = attributeErrors.Concat(ruleErrors);
                 _allDiagnostics = combinedDiagnostics.ToArray();
             }

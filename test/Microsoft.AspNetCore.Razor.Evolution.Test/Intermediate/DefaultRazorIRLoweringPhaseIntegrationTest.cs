@@ -317,7 +317,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Intermediate
                 AssemblyName = "TestAssembly",
                 Attributes = new[] 
                 {
-                    new TagHelperAttributeDescriptor
+                    new BoundAttributeDescriptor
                     {
                         Name = "bound",
                         PropertyName = "FooProp",

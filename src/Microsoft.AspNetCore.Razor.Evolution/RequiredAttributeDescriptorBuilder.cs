@@ -7,52 +7,52 @@ using System.Linq;
 
 namespace Microsoft.AspNetCore.Razor.Evolution
 {
-    public class RequiredTagHelperAttributeDescriptorBuilder
+    public sealed class RequiredAttributeDescriptorBuilder
     {
         private string _name;
-        private TagHelperRequiredAttributeNameComparison _nameComparison;
+        private RequiredAttributeDescriptor.NameComparisonMode _nameComparison;
         private string _value;
-        private TagHelperRequiredAttributeValueComparison _valueComparison;
+        private RequiredAttributeDescriptor.ValueComparisonMode _valueComparison;
         private List<RazorDiagnostic> _diagnostics;
 
-        private RequiredTagHelperAttributeDescriptorBuilder()
+        private RequiredAttributeDescriptorBuilder()
         {
         }
 
-        public static RequiredTagHelperAttributeDescriptorBuilder Create()
+        public static RequiredAttributeDescriptorBuilder Create()
         {
-            return new RequiredTagHelperAttributeDescriptorBuilder();
+            return new RequiredAttributeDescriptorBuilder();
         }
 
-        public RequiredTagHelperAttributeDescriptorBuilder Name(string name)
+        public RequiredAttributeDescriptorBuilder Name(string name)
         {
             _name = name;
 
             return this;
         }
 
-        public RequiredTagHelperAttributeDescriptorBuilder NameComparison(TagHelperRequiredAttributeNameComparison nameComparison)
+        public RequiredAttributeDescriptorBuilder NameComparisonMode(RequiredAttributeDescriptor.NameComparisonMode nameComparison)
         {
             _nameComparison = nameComparison;
 
             return this;
         }
 
-        public RequiredTagHelperAttributeDescriptorBuilder Value(string value)
+        public RequiredAttributeDescriptorBuilder Value(string value)
         {
             _value = value;
 
             return this;
         }
 
-        public RequiredTagHelperAttributeDescriptorBuilder ValueComparison(TagHelperRequiredAttributeValueComparison valueComparison)
+        public RequiredAttributeDescriptorBuilder ValueComparison(RequiredAttributeDescriptor.ValueComparisonMode valueComparison)
         {
             _valueComparison = valueComparison;
 
             return this;
         }
 
-        public TagHelperRequiredAttributeDescriptor Build()
+        public RequiredAttributeDescriptor Build()
         {
             var rule = new DefaultTagHelperRequiredAttributeDescriptor(
                 _name,
@@ -64,13 +64,13 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             return rule;
         }
 
-        private class DefaultTagHelperRequiredAttributeDescriptor : TagHelperRequiredAttributeDescriptor
+        private class DefaultTagHelperRequiredAttributeDescriptor : RequiredAttributeDescriptor
         {
             public DefaultTagHelperRequiredAttributeDescriptor(
                 string name,
-                TagHelperRequiredAttributeNameComparison nameComparison,
+                NameComparisonMode nameComparison,
                 string value,
-                TagHelperRequiredAttributeValueComparison valueComparison,
+                ValueComparisonMode valueComparison,
                 IEnumerable<RazorDiagnostic> diagnostics)
             {
                 Name = name;

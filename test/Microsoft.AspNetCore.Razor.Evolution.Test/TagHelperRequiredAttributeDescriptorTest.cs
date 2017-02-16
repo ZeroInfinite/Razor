@@ -9,10 +9,10 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             get
             {
                 // requiredAttributeDescriptor, attributeName, attributeValue, expectedResult
-                return new TheoryData<TagHelperRequiredAttributeDescriptor, string, string, bool>
+                return new TheoryData<RequiredAttributeDescriptor, string, string, bool>
                 {
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "key"
                         },
@@ -21,7 +21,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         true
                     },
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "key"
                         },
@@ -30,7 +30,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         false
                     },
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "route-",
                             NameComparison = TagHelperRequiredAttributeNameComparison.PrefixMatch,
@@ -40,7 +40,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         true
                     },
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "route-",
                             NameComparison = TagHelperRequiredAttributeNameComparison.PrefixMatch,
@@ -50,7 +50,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         false
                     },
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "route-",
                             NameComparison = TagHelperRequiredAttributeNameComparison.PrefixMatch,
@@ -60,7 +60,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         false
                     },
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "key",
                             NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch,
@@ -70,7 +70,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         true
                     },
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "key",
                             NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch,
@@ -80,7 +80,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         false
                     },
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "key",
                             NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch,
@@ -92,7 +92,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         true
                     },
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "key",
                             NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch,
@@ -104,7 +104,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         false
                     },
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "class",
                             NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch,
@@ -116,7 +116,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         true
                     },
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "class",
                             NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch,
@@ -128,7 +128,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         false
                     },
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "href",
                             NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch,
@@ -140,7 +140,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         true
                     },
                     {
-                        new TagHelperRequiredAttributeDescriptor
+                        new RequiredAttributeDescriptor
                         {
                             Name = "href",
                             NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch,
@@ -164,7 +164,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             bool expectedResult)
         {
             // Act
-            var result = ((TagHelperRequiredAttributeDescriptor)requiredAttributeDescriptor).IsMatch(attributeName, attributeValue);
+            var result = ((RequiredAttributeDescriptor)requiredAttributeDescriptor).IsMatch(attributeName, attributeValue);
 
             // Assert
             Assert.Equal(expectedResult, result);

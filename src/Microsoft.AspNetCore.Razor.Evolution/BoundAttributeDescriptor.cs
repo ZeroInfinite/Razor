@@ -10,9 +10,9 @@ namespace Microsoft.AspNetCore.Razor.Evolution
     /// <summary>
     /// A metadata class describing a tag helper attribute.
     /// </summary>
-    public abstract class TagHelperAttributeDescriptor
+    public abstract class BoundAttributeDescriptor
     {
-        protected TagHelperAttributeDescriptor(string kind)
+        protected BoundAttributeDescriptor(string kind)
         {
             Kind = kind;
         }
@@ -27,17 +27,19 @@ namespace Microsoft.AspNetCore.Razor.Evolution
 
         public string Name { get; protected set; }
 
+        public string KeyValueAttributeNamePrefix { get; set; }
+
         public string TypeName { get; protected set; }
 
         public string KeyValueTypeName { get; protected set; }
-
-        public IReadOnlyDictionary<string, string> PropertyBag { get; protected set; }
 
         public string Documentation { get; protected set; }
 
         public string DisplayName { get; protected set; }
 
         public IEnumerable<RazorDiagnostic> Diagnostics { get; protected set; }
+
+        public IReadOnlyDictionary<string, string> Metadata { get; protected set; }
 
         public bool HasAnyErrors
         {

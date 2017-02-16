@@ -17,7 +17,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
         {
         }
 
-        public override bool Equals(TagHelperRequiredAttributeDescriptor descriptorX, TagHelperRequiredAttributeDescriptor descriptorY)
+        public override bool Equals(RequiredAttributeDescriptor descriptorX, RequiredAttributeDescriptor descriptorY)
         {
             if (descriptorX == descriptorY)
             {
@@ -30,7 +30,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             return true;
         }
 
-        public override int GetHashCode(TagHelperRequiredAttributeDescriptor descriptor)
+        public override int GetHashCode(RequiredAttributeDescriptor descriptor)
         {
             var hashCodeCombiner = HashCodeCombiner.Start();
             hashCodeCombiner.Add(base.GetHashCode(descriptor));

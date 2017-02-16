@@ -106,7 +106,7 @@ namespace Microsoft.CodeAnalysis.Razor
         private IEnumerable<TagHelperDescriptor> BuildTagHelperDescriptors(
             INamedTypeSymbol type,
             string assemblyName,
-            IEnumerable<TagHelperAttributeDescriptor> attributeDescriptors,
+            IEnumerable<BoundAttributeDescriptor> attributeDescriptors,
             IEnumerable<AttributeData> targetElementAttributes,
             IEnumerable<string> allowedChildren)
         {
@@ -160,7 +160,7 @@ namespace Microsoft.CodeAnalysis.Razor
                         typeName,
                         assemblyName,
                         attributeDescriptors,
-                        requiredAttributeDescriptors: Enumerable.Empty<TagHelperRequiredAttributeDescriptor>(),
+                        requiredAttributeDescriptors: Enumerable.Empty<RequiredAttributeDescriptor>(),
                         allowedChildren: allowedChildren,
                         tagStructure: default(TagStructure),
                         parentTag: null,
@@ -247,12 +247,12 @@ namespace Microsoft.CodeAnalysis.Razor
         private static TagHelperDescriptor BuildTagHelperDescriptor(
             string typeName,
             string assemblyName,
-            IEnumerable<TagHelperAttributeDescriptor> attributeDescriptors,
+            IEnumerable<BoundAttributeDescriptor> attributeDescriptors,
             AttributeData targetElementAttribute,
             IEnumerable<string> allowedChildren,
             TagHelperDesignTimeDescriptor designTimeDescriptor)
         {
-            IEnumerable<TagHelperRequiredAttributeDescriptor> requiredAttributeDescriptors;
+            IEnumerable<RequiredAttributeDescriptor> requiredAttributeDescriptors;
             TryGetRequiredAttributeDescriptors(
                 HtmlTargetElementAttribute_Attributes(targetElementAttribute),
                 errorSink: null,
@@ -325,8 +325,8 @@ namespace Microsoft.CodeAnalysis.Razor
             string tagName,
             string typeName,
             string assemblyName,
-            IEnumerable<TagHelperAttributeDescriptor> attributeDescriptors,
-            IEnumerable<TagHelperRequiredAttributeDescriptor> requiredAttributeDescriptors,
+            IEnumerable<BoundAttributeDescriptor> attributeDescriptors,
+            IEnumerable<RequiredAttributeDescriptor> requiredAttributeDescriptors,
             IEnumerable<string> allowedChildren,
             string parentTag,
             TagStructure tagStructure,
@@ -354,7 +354,7 @@ namespace Microsoft.CodeAnalysis.Razor
             ErrorSink errorSink)
         {
             var validTagName = ValidateName(HtmlTargetElementAttribute_Tag(attribute), targetingAttributes: false, errorSink: errorSink);
-            IEnumerable<TagHelperRequiredAttributeDescriptor> requiredAttributeDescriptors;
+            IEnumerable<RequiredAttributeDescriptor> requiredAttributeDescriptors;
             var validRequiredAttributes = TryGetRequiredAttributeDescriptors(HtmlTargetElementAttribute_Attributes(attribute), errorSink, out requiredAttributeDescriptors);
             var validParentTagName = ValidateParentTagName(HtmlTargetElementAttribute_ParentTag(attribute), errorSink);
 
@@ -394,7 +394,7 @@ namespace Microsoft.CodeAnalysis.Razor
         private static bool TryGetRequiredAttributeDescriptors(
             string requiredAttributes,
             ErrorSink errorSink,
-            out IEnumerable<TagHelperRequiredAttributeDescriptor> descriptors)
+            out IEnumerable<RequiredAttributeDescriptor> descriptors)
         {
             var parser = new RequiredAttributeParser(requiredAttributes);
 
@@ -459,12 +459,12 @@ namespace Microsoft.CodeAnalysis.Razor
             return validName;
         }
 
-        private IEnumerable<TagHelperAttributeDescriptor> GetAttributeDescriptors(INamedTypeSymbol type, ErrorSink errorSink)
+        private IEnumerable<BoundAttributeDescriptor> GetAttributeDescriptors(INamedTypeSymbol type, ErrorSink errorSink)
         {
-            var attributeDescriptors = new List<TagHelperAttributeDescriptor>();
+            var attributeDescriptors = new List<BoundAttributeDescriptor>();
 
             // Keep indexer descriptors separate to avoid sorting the combined list later.
-            var indexerDescriptors = new List<TagHelperAttributeDescriptor>();
+            var indexerDescriptors = new List<BoundAttributeDescriptor>();
 
             var accessibleProperties = GetAccessibleProperties(type);
             foreach (var property in accessibleProperties)
@@ -494,7 +494,7 @@ namespace Microsoft.CodeAnalysis.Razor
                     attributeName = (string)attributeNameAttribute.ConstructorArguments[0].Value;
                 }
 
-                TagHelperAttributeDescriptor mainDescriptor = null;
+                BoundAttributeDescriptor mainDescriptor = null;
                 if (property.SetMethod != null && property.SetMethod.DeclaredAccessibility == Accessibility.Public)
                 {
                     mainDescriptor = ToAttributeDescriptor(property, attributeName);
@@ -584,7 +584,7 @@ namespace Microsoft.CodeAnalysis.Razor
 
         // Internal for testing.
         internal static bool ValidateTagHelperAttributeDescriptor(
-            TagHelperAttributeDescriptor attributeDescriptor,
+            BoundAttributeDescriptor attributeDescriptor,
             INamedTypeSymbol parentType,
             ErrorSink errorSink)
         {
@@ -687,7 +687,7 @@ namespace Microsoft.CodeAnalysis.Razor
             return isValid;
         }
 
-        private TagHelperAttributeDescriptor ToAttributeDescriptor(IPropertySymbol property, string attributeName)
+        private BoundAttributeDescriptor ToAttributeDescriptor(IPropertySymbol property, string attributeName)
         {
             return ToAttributeDescriptor(
                 property,
@@ -697,7 +697,7 @@ namespace Microsoft.CodeAnalysis.Razor
                 isStringProperty: property.Type.SpecialType == SpecialType.System_String);
         }
 
-        private TagHelperAttributeDescriptor ToIndexerAttributeDescriptor(
+        private BoundAttributeDescriptor ToIndexerAttributeDescriptor(
             IPropertySymbol property,
             AttributeData attributeNameAttribute,
             INamedTypeSymbol parentType,
@@ -813,7 +813,7 @@ namespace Microsoft.CodeAnalysis.Razor
                 isStringProperty: dictionaryType == null ? false : dictionaryType.TypeArguments[1].SpecialType == SpecialType.System_String);
         }
 
-        private TagHelperAttributeDescriptor ToAttributeDescriptor(
+        private BoundAttributeDescriptor ToAttributeDescriptor(
             IPropertySymbol property,
             string attributeName,
             string typeName,
@@ -842,7 +842,7 @@ namespace Microsoft.CodeAnalysis.Razor
                 }
             }
 
-            return new TagHelperAttributeDescriptor
+            return new BoundAttributeDescriptor
             {
                 Name = attributeName,
                 PropertyName = property.Name,
@@ -923,22 +923,22 @@ namespace Microsoft.CodeAnalysis.Razor
 
             public bool TryParse(
                 ErrorSink errorSink,
-                out IEnumerable<TagHelperRequiredAttributeDescriptor> requiredAttributeDescriptors)
+                out IEnumerable<RequiredAttributeDescriptor> requiredAttributeDescriptors)
             {
                 if (string.IsNullOrEmpty(_requiredAttributes))
                 {
-                    requiredAttributeDescriptors = Enumerable.Empty<TagHelperRequiredAttributeDescriptor>();
+                    requiredAttributeDescriptors = Enumerable.Empty<RequiredAttributeDescriptor>();
                     return true;
                 }
 
                 requiredAttributeDescriptors = null;
-                var descriptors = new List<TagHelperRequiredAttributeDescriptor>();
+                var descriptors = new List<RequiredAttributeDescriptor>();
 
                 PassOptionalWhitespace();
 
                 do
                 {
-                    TagHelperRequiredAttributeDescriptor descriptor;
+                    RequiredAttributeDescriptor descriptor;
                     if (At('['))
                     {
                         descriptor = ParseCssSelector(errorSink);
@@ -986,7 +986,7 @@ namespace Microsoft.CodeAnalysis.Razor
                 return true;
             }
 
-            private TagHelperRequiredAttributeDescriptor ParsePlainSelector(ErrorSink errorSink)
+            private RequiredAttributeDescriptor ParsePlainSelector(ErrorSink errorSink)
             {
                 var nameEndIndex = _requiredAttributes.IndexOfAny(InvalidPlainAttributeNameCharacters, _index);
                 string attributeName;
@@ -1011,10 +1011,10 @@ namespace Microsoft.CodeAnalysis.Razor
                     }
                 }
 
-                TagHelperRequiredAttributeDescriptor descriptor = null;
+                RequiredAttributeDescriptor descriptor = null;
                 if (ValidateName(attributeName, targetingAttributes: true, errorSink: errorSink))
                 {
-                    descriptor = new TagHelperRequiredAttributeDescriptor
+                    descriptor = new RequiredAttributeDescriptor
                     {
                         Name = attributeName,
                         NameComparison = nameComparison
@@ -1108,7 +1108,7 @@ namespace Microsoft.CodeAnalysis.Razor
                 return value;
             }
 
-            private TagHelperRequiredAttributeDescriptor ParseCssSelector(ErrorSink errorSink)
+            private RequiredAttributeDescriptor ParseCssSelector(ErrorSink errorSink)
             {
                 Debug.Assert(At('['));
 
@@ -1177,7 +1177,7 @@ namespace Microsoft.CodeAnalysis.Razor
                     return null;
                 }
 
-                return new TagHelperRequiredAttributeDescriptor
+                return new RequiredAttributeDescriptor
                 {
                     Name = attributeName,
                     NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch,

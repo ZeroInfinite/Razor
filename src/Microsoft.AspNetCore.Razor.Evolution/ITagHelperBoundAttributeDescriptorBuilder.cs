@@ -7,10 +7,10 @@ using System.Linq;
 
 namespace Microsoft.AspNetCore.Razor.Evolution
 {
-    public class ITagHelperAttributeDescriptorBuilder
+    public sealed class ITagHelperBoundAttributeDescriptorBuilder
     {
         public static readonly string DescriptorKind = "ITagHelper";
-        public static readonly string ITagHelperPropertyNameKey = "ITagHelper.PropertyName";
+        public static readonly string PropertyNameKey = "ITagHelper.PropertyName";
 
         private static readonly IReadOnlyDictionary<string, string> PrimitiveDisplayTypeNameLookups = new Dictionary<string, string>(StringComparer.Ordinal)
         {
@@ -37,71 +37,73 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         private string _propertyName;
         private string _typeName;
         private string _documentation;
+        private string _dictionaryAttributeNamePrefix;
         private List<RazorDiagnostic> _diagnostics;
         private readonly string _containingTypeName;
         private readonly Dictionary<string, string> _propertyBag;
 
-        private ITagHelperAttributeDescriptorBuilder(string containingTypeName)
+        private ITagHelperBoundAttributeDescriptorBuilder(string containingTypeName)
         {
             _containingTypeName = containingTypeName;
             _propertyBag = new Dictionary<string, string>();
         }
 
-        public static ITagHelperAttributeDescriptorBuilder Create(string containingTypeName)
+        public static ITagHelperBoundAttributeDescriptorBuilder Create(string containingTypeName)
         {
-            return new ITagHelperAttributeDescriptorBuilder(containingTypeName);
+            return new ITagHelperBoundAttributeDescriptorBuilder(containingTypeName);
         }
 
-        public ITagHelperAttributeDescriptorBuilder Name(string name)
+        public ITagHelperBoundAttributeDescriptorBuilder Name(string name)
         {
             _name = name;
 
             return this;
         }
 
-        public ITagHelperAttributeDescriptorBuilder PropertyName(string propertyName)
+        public ITagHelperBoundAttributeDescriptorBuilder PropertyName(string propertyName)
         {
             _propertyName = propertyName;
 
             return this;
         }
 
-        public ITagHelperAttributeDescriptorBuilder TypeName(string typeName)
+        public ITagHelperBoundAttributeDescriptorBuilder TypeName(string typeName)
         {
             _typeName = typeName;
 
             return this;
         }
 
-        public ITagHelperAttributeDescriptorBuilder AsEnum()
+        public ITagHelperBoundAttributeDescriptorBuilder AsEnum()
         {
             _isEnum = true;
 
             return this;
         }
 
-        public ITagHelperAttributeDescriptorBuilder DictionaryValueTypeName(string dictionaryValueTypeName)
+        public ITagHelperBoundAttributeDescriptorBuilder AsDictionary(string attributeNamePrefix, string valueTypeName)
         {
-            _dictionaryValueTypeName = dictionaryValueTypeName;
+            _dictionaryAttributeNamePrefix = attributeNamePrefix;
+            _dictionaryValueTypeName = valueTypeName;
 
             return this;
         }
 
-        public ITagHelperAttributeDescriptorBuilder Documentation(string documentation)
+        public ITagHelperBoundAttributeDescriptorBuilder Documentation(string documentation)
         {
             _documentation = documentation;
 
             return this;
         }
 
-        public ITagHelperAttributeDescriptorBuilder AddMetadata(string key, string value)
+        public ITagHelperBoundAttributeDescriptorBuilder AddMetadata(string key, string value)
         {
             _propertyBag[key] = value;
 
             return this;
         }
 
-        public TagHelperAttributeDescriptor Build()
+        public BoundAttributeDescriptor Build()
         {
             if (!PrimitiveDisplayTypeNameLookups.TryGetValue(_typeName, out var simpleName))
             {
@@ -109,11 +111,12 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             }
 
             var displayName = $"{simpleName} {_containingTypeName}.{_propertyName}";
-            var descriptor = new ITagHelperAttributeDescriptor(
+            var descriptor = new ITagHelperBoundAttributeDescriptor(
                 _isEnum,
                 _name,
                 _propertyName,
                 _typeName,
+                _dictionaryAttributeNamePrefix,
                 _dictionaryValueTypeName,
                 _documentation,
                 displayName,
@@ -123,13 +126,14 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             return descriptor;
         }
 
-        private class ITagHelperAttributeDescriptor : TagHelperAttributeDescriptor
+        private class ITagHelperBoundAttributeDescriptor : BoundAttributeDescriptor
         {
-            public ITagHelperAttributeDescriptor(
+            public ITagHelperBoundAttributeDescriptor(
                 bool isEnum,
                 string name,
                 string propertyName,
                 string typeName,
+                string dictionaryAttributeNamePrefix,
                 string dictionaryValueTypeName,
                 string documentation,
                 string displayName,
@@ -141,13 +145,14 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                 IsStringProperty = typeName == typeof(string).FullName || typeName == "string";
                 Name = name;
                 TypeName = typeName;
+                KeyValueAttributeNamePrefix = dictionaryAttributeNamePrefix;
                 KeyValueTypeName = dictionaryValueTypeName;
                 Documentation = documentation;
                 DisplayName = displayName;
                 Diagnostics = diagnostics;
 
-                propertyBag[ITagHelperPropertyNameKey] = propertyName;
-                PropertyBag = propertyBag;
+                propertyBag[PropertyNameKey] = propertyName;
+                Metadata = propertyBag;
             }
         }
     }

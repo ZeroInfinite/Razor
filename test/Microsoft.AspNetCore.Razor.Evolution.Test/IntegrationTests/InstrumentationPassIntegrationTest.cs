@@ -32,13 +32,13 @@ namespace Microsoft.AspNetCore.Razor.Evolution.IntegrationTests
                     AssemblyName = "TestAssembly",
                     Attributes = new[] 
                     {
-                        new TagHelperAttributeDescriptor
+                        new BoundAttributeDescriptor
                         {
                             Name = "value",
                             PropertyName = "FooProp",
                             TypeName = "System.String"      // Gets preallocated
                         },
-                        new TagHelperAttributeDescriptor
+                        new BoundAttributeDescriptor
                         {
                             Name = "date",
                             PropertyName = "BarProp",

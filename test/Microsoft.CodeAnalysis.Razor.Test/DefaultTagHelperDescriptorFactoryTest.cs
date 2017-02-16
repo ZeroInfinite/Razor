@@ -68,7 +68,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
             // Arrange
             var parser = new DefaultTagHelperDescriptorFactory.RequiredAttributeParser(requiredAttributes);
             var errorSink = new ErrorSink();
-            IEnumerable<TagHelperRequiredAttributeDescriptor> descriptors;
+            IEnumerable<RequiredAttributeDescriptor> descriptors;
 
             // Act
             var parsedCorrectly = parser.TryParse(errorSink, out descriptors);
@@ -84,14 +84,14 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
         {
             get
             {
-                Func<string, TagHelperRequiredAttributeNameComparison, TagHelperRequiredAttributeDescriptor> plain =
-                    (name, nameComparison) => new TagHelperRequiredAttributeDescriptor
+                Func<string, TagHelperRequiredAttributeNameComparison, RequiredAttributeDescriptor> plain =
+                    (name, nameComparison) => new RequiredAttributeDescriptor
                     {
                         Name = name,
                         NameComparison = nameComparison
                     };
-                Func<string, string, TagHelperRequiredAttributeValueComparison, TagHelperRequiredAttributeDescriptor> css =
-                    (name, value, valueComparison) => new TagHelperRequiredAttributeDescriptor
+                Func<string, string, TagHelperRequiredAttributeValueComparison, RequiredAttributeDescriptor> css =
+                    (name, value, valueComparison) => new RequiredAttributeDescriptor
                     {
                         Name = name,
                         NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch,
@@ -99,10 +99,10 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                         ValueComparison = valueComparison,
                     };
 
-                return new TheoryData<string, IEnumerable<TagHelperRequiredAttributeDescriptor>>
+                return new TheoryData<string, IEnumerable<RequiredAttributeDescriptor>>
                 {
-                    { null, Enumerable.Empty<TagHelperRequiredAttributeDescriptor>() },
-                    { string.Empty, Enumerable.Empty<TagHelperRequiredAttributeDescriptor>() },
+                    { null, Enumerable.Empty<RequiredAttributeDescriptor>() },
+                    { string.Empty, Enumerable.Empty<RequiredAttributeDescriptor>() },
                     { "name", new[] { plain("name", TagHelperRequiredAttributeNameComparison.FullMatch) } },
                     { "name-*", new[] { plain("name-", TagHelperRequiredAttributeNameComparison.PrefixMatch) } },
                     { "  name-*   ", new[] { plain("name-", TagHelperRequiredAttributeNameComparison.PrefixMatch) } },
@@ -156,12 +156,12 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
         [MemberData(nameof(RequiredAttributeParserData))]
         public void RequiredAttributeParser_ParsesRequiredAttributesCorrectly(
             string requiredAttributes,
-            IEnumerable<TagHelperRequiredAttributeDescriptor> expectedDescriptors)
+            IEnumerable<RequiredAttributeDescriptor> expectedDescriptors)
         {
             // Arrange
             var parser = new DefaultTagHelperDescriptorFactory.RequiredAttributeParser(requiredAttributes);
             var errorSink = new ErrorSink();
-            IEnumerable<TagHelperRequiredAttributeDescriptor> descriptors;
+            IEnumerable<RequiredAttributeDescriptor> descriptors;
 
             // Act
             var parsedCorrectly = parser.TryParse(errorSink, out descriptors);
@@ -178,13 +178,13 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
             {
                 var attributeDescriptors = new[]
                 {
-                    new TagHelperAttributeDescriptor
+                    new BoundAttributeDescriptor
                     {
                         Name = "non-enum-property",
                         PropertyName = nameof(EnumTagHelper.NonEnumProperty),
                         TypeName = typeof(int).FullName
                     },
-                    new TagHelperAttributeDescriptor
+                    new BoundAttributeDescriptor
                     {
                         Name = "enum-property",
                         PropertyName = nameof(EnumTagHelper.EnumProperty),
@@ -531,7 +531,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 assemblyName: AssemblyName,
                                 attributes: new[]
                                 {
-                                    new TagHelperAttributeDescriptor
+                                    new BoundAttributeDescriptor
                                     {
                                         Name = "property",
                                         PropertyName = nameof(InheritedEditorBrowsableTagHelper.Property),
@@ -552,7 +552,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 assemblyName: AssemblyName,
                                 attributes: new[]
                                 {
-                                    new TagHelperAttributeDescriptor
+                                    new BoundAttributeDescriptor
                                     {
                                         Name = "property",
                                         PropertyName = nameof(EditorBrowsableTagHelper.Property),
@@ -570,7 +570,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 tagName: "hidden-property-editor-browsable",
                                 typeName: typeof(HiddenPropertyEditorBrowsableTagHelper).FullName,
                                 assemblyName: AssemblyName,
-                                attributes: new TagHelperAttributeDescriptor[0])
+                                attributes: new BoundAttributeDescriptor[0])
                         }
                     },
                     {
@@ -584,7 +584,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 assemblyName: AssemblyName,
                                 attributes: new[]
                                 {
-                                    new TagHelperAttributeDescriptor
+                                    new BoundAttributeDescriptor
                                     {
                                         Name = "property",
                                         PropertyName = nameof(HiddenPropertyEditorBrowsableTagHelper.Property),
@@ -604,7 +604,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 assemblyName: AssemblyName,
                                 attributes: new[]
                                 {
-                                    new TagHelperAttributeDescriptor
+                                    new BoundAttributeDescriptor
                                     {
                                         Name = "property",
                                         PropertyName = nameof(OverriddenEditorBrowsableTagHelper.Property),
@@ -624,7 +624,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 assemblyName: AssemblyName,
                                 attributes: new[]
                                 {
-                                    new TagHelperAttributeDescriptor
+                                    new BoundAttributeDescriptor
                                     {
                                         Name = "property2",
                                         PropertyName = nameof(MultiPropertyEditorBrowsableTagHelper.Property2),
@@ -644,13 +644,13 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 assemblyName: AssemblyName,
                                 attributes: new[]
                                 {
-                                    new TagHelperAttributeDescriptor
+                                    new BoundAttributeDescriptor
                                     {
                                         Name = "property",
                                         PropertyName = nameof(MultiPropertyEditorBrowsableTagHelper.Property),
                                         TypeName = typeof(int).FullName
                                     },
-                                    new TagHelperAttributeDescriptor
+                                    new BoundAttributeDescriptor
                                     {
                                         Name = "property2",
                                         PropertyName = nameof(MultiPropertyEditorBrowsableTagHelper.Property2),
@@ -668,7 +668,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 tagName: "overridden-property-editor-browsable",
                                 typeName: typeof(OverriddenPropertyEditorBrowsableTagHelper).FullName,
                                 assemblyName: AssemblyName,
-                                attributes: new TagHelperAttributeDescriptor[0])
+                                attributes: new BoundAttributeDescriptor[0])
                         }
                     },
                     {
@@ -682,13 +682,13 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 assemblyName: AssemblyName,
                                 attributes: new[]
                                 {
-                                    new TagHelperAttributeDescriptor
+                                    new BoundAttributeDescriptor
                                     {
                                         Name = "property2",
                                         PropertyName = nameof(OverriddenPropertyEditorBrowsableTagHelper.Property2),
                                         TypeName = typeof(int).FullName
                                     },
-                                    new TagHelperAttributeDescriptor
+                                    new BoundAttributeDescriptor
                                     {
                                         Name = "property",
                                         PropertyName = nameof(OverriddenPropertyEditorBrowsableTagHelper.Property),
@@ -708,7 +708,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 assemblyName: AssemblyName,
                                 attributes: new[]
                                 {
-                                    new TagHelperAttributeDescriptor
+                                    new BoundAttributeDescriptor
                                     {
                                         Name = "property",
                                         PropertyName = nameof(DefaultEditorBrowsableTagHelper.Property),
@@ -746,7 +746,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
         {
             get
             {
-                var attributes = Enumerable.Empty<TagHelperAttributeDescriptor>();
+                var attributes = Enumerable.Empty<BoundAttributeDescriptor>();
 
                 // tagHelperType, expectedDescriptors
                 return new TheoryData<Type, IEnumerable<TagHelperDescriptor>>
@@ -762,7 +762,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "class" }
+                                    new RequiredAttributeDescriptor { Name = "class" }
                                 })
                         }
                     },
@@ -777,8 +777,8 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "class" },
-                                    new TagHelperRequiredAttributeDescriptor { Name = "style" }
+                                    new RequiredAttributeDescriptor { Name = "class" },
+                                    new RequiredAttributeDescriptor { Name = "style" }
                                 })
                         }
                     },
@@ -793,7 +793,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "custom" }
+                                    new RequiredAttributeDescriptor { Name = "custom" }
                                 }),
                             CreateTagHelperDescriptor(
                                 TagHelperDescriptorProvider.ElementCatchAllTarget,
@@ -802,8 +802,8 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "class" },
-                                    new TagHelperRequiredAttributeDescriptor { Name = "style" }
+                                    new RequiredAttributeDescriptor { Name = "class" },
+                                    new RequiredAttributeDescriptor { Name = "style" }
                                 })
                         }
                     },
@@ -818,7 +818,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "style" }
+                                    new RequiredAttributeDescriptor { Name = "style" }
                                 })
                         }
                     },
@@ -833,7 +833,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "class" }
+                                    new RequiredAttributeDescriptor { Name = "class" }
                                 })
                         }
                     },
@@ -848,7 +848,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "class" }
+                                    new RequiredAttributeDescriptor { Name = "class" }
                                 })
                         }
                     },
@@ -863,7 +863,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "class" }
+                                    new RequiredAttributeDescriptor { Name = "class" }
                                 }),
                             CreateTagHelperDescriptor(
                                 "input",
@@ -872,7 +872,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "class" }
+                                    new RequiredAttributeDescriptor { Name = "class" }
                                 })
                         }
                     },
@@ -887,7 +887,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "style" }
+                                    new RequiredAttributeDescriptor { Name = "style" }
                                 }),
                             CreateTagHelperDescriptor(
                                 "input",
@@ -896,7 +896,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "class" }
+                                    new RequiredAttributeDescriptor { Name = "class" }
                                 })
                         }
                     },
@@ -911,8 +911,8 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "class" },
-                                    new TagHelperRequiredAttributeDescriptor { Name = "style" }
+                                    new RequiredAttributeDescriptor { Name = "class" },
+                                    new RequiredAttributeDescriptor { Name = "style" }
                                 })
                         }
                     },
@@ -927,8 +927,8 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "class" },
-                                    new TagHelperRequiredAttributeDescriptor { Name = "style" }
+                                    new RequiredAttributeDescriptor { Name = "class" },
+                                    new RequiredAttributeDescriptor { Name = "style" }
                                 }),
                             CreateTagHelperDescriptor(
                                 "input",
@@ -936,8 +936,8 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 AssemblyName,
                                 attributes,
                                 requiredAttributes: new[] {
-                                    new TagHelperRequiredAttributeDescriptor { Name = "class" },
-                                    new TagHelperRequiredAttributeDescriptor { Name = "style" }
+                                    new RequiredAttributeDescriptor { Name = "class" },
+                                    new RequiredAttributeDescriptor { Name = "style" }
                                 }),
                         }
                     },
@@ -952,7 +952,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor
+                                    new RequiredAttributeDescriptor
                                     {
                                         Name = "class",
                                         NameComparison = TagHelperRequiredAttributeNameComparison.PrefixMatch,
@@ -971,12 +971,12 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                                 attributes,
                                 requiredAttributes: new[]
                                 {
-                                    new TagHelperRequiredAttributeDescriptor
+                                    new RequiredAttributeDescriptor
                                     {
                                         Name = "class",
                                         NameComparison = TagHelperRequiredAttributeNameComparison.PrefixMatch,
                                     },
-                                    new TagHelperRequiredAttributeDescriptor
+                                    new RequiredAttributeDescriptor
                                     {
                                         Name = "style",
                                         NameComparison = TagHelperRequiredAttributeNameComparison.PrefixMatch,
@@ -1053,7 +1053,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
             Assert.Empty(errorSink.Errors);
             var descriptor = Assert.Single(descriptors);
             Assert.Equal(expectedTagName, descriptor.TagName, StringComparer.Ordinal);
-            var attributeDescriptor = Assert.Single(descriptor.Attributes);
+            var attributeDescriptor = Assert.Single(descriptor.BoundAttributes);
             Assert.Equal(expectedAttributeName, attributeDescriptor.Name);
         }
 
@@ -1163,7 +1163,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                 AssemblyName,
                 new[]
                 {
-                    new TagHelperAttributeDescriptor
+                    new BoundAttributeDescriptor
                     {
                         Name = "int-attribute",
                         PropertyName = nameof(InheritedSingleAttributeTagHelper.IntAttribute),
@@ -1273,7 +1273,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                 AssemblyName,
                 new[]
                 {
-                    new TagHelperAttributeDescriptor
+                    new BoundAttributeDescriptor
                     {
                         Name = "bound-property",
                         PropertyName = nameof(NotBoundAttributeTagHelper.BoundProperty),
@@ -1322,7 +1322,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                     AssemblyName,
                     new[]
                     {
-                        new TagHelperAttributeDescriptor
+                        new BoundAttributeDescriptor
                         {
                             Name = "valid-attribute",
                             PropertyName = nameof(MultiTagTagHelper.ValidAttribute),
@@ -1336,7 +1336,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces
                     AssemblyName,
                     new[]
                     {
-                        new TagHelperAttributeDescriptor
+                        new BoundAttributeDescriptor
                         {
                             Name = "valid-attribute",
                             PropertyName = nameof(MultiTagTagHelper.ValidAttribute),
@@ -1523,11 +1523,11 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
                     "attributes with name '{2}' because name starts with 'data-'.";
 
                 // type, expectedAttributeDescriptors, expectedErrors
-                return new TheoryData<Type, IEnumerable<TagHelperAttributeDescriptor>, string[]>
+                return new TheoryData<Type, IEnumerable<BoundAttributeDescriptor>, string[]>
                 {
                     {
                         typeof(InvalidBoundAttribute),
-                        Enumerable.Empty<TagHelperAttributeDescriptor>(),
+                        Enumerable.Empty<BoundAttributeDescriptor>(),
                         new[]
                         {
                             string.Format(
@@ -1568,7 +1568,7 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
                     },
                     {
                         typeof(OverriddenValidBoundAttributeWithInvalid),
-                        Enumerable.Empty<TagHelperAttributeDescriptor>(),
+                        Enumerable.Empty<BoundAttributeDescriptor>(),
                         new[]
                         {
                             string.Format(
@@ -1580,7 +1580,7 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
                     },
                     {
                         typeof(OverriddenValidBoundAttributeWithInvalidUpperCase),
-                        Enumerable.Empty<TagHelperAttributeDescriptor>(),
+                        Enumerable.Empty<BoundAttributeDescriptor>(),
                         new[]
                         {
                             string.Format(
@@ -1598,7 +1598,7 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
         [MemberData(nameof(InvalidTagHelperAttributeDescriptorData))]
         public void CreateDescriptors_DoesNotAllowDataDashAttributes(
             Type type,
-            IEnumerable<TagHelperAttributeDescriptor> expectedAttributeDescriptors,
+            IEnumerable<BoundAttributeDescriptor> expectedAttributeDescriptors,
             string[] expectedErrors)
         {
             // Arrange
@@ -1624,12 +1624,12 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
             var actualDescriptor = Assert.Single(descriptors);
             Assert.Equal(
                 expectedAttributeDescriptors,
-                actualDescriptor.Attributes,
+                actualDescriptor.BoundAttributes,
                 TagHelperAttributeDescriptorComparer.Default);
         }
 
         // tagTelperType, expectedAttributeDescriptors, expectedErrorMessages
-        public static TheoryData<Type, IEnumerable<TagHelperAttributeDescriptor>, string[]> TagHelperWithPrefixData
+        public static TheoryData<Type, IEnumerable<BoundAttributeDescriptor>, string[]> TagHelperWithPrefixData
         {
             get
             {
@@ -1642,19 +1642,19 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
                 dictionaryNamespace = dictionaryNamespace.Substring(0, dictionaryNamespace.IndexOf('`'));
 
                 // tagTelperType, expectedAttributeDescriptors, expectedErrorMessages
-                return new TheoryData<Type, IEnumerable<TagHelperAttributeDescriptor>, string[]>
+                return new TheoryData<Type, IEnumerable<BoundAttributeDescriptor>, string[]>
                 {
                     {
                         typeof(DefaultValidHtmlAttributePrefix),
                         new[]
                         {
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "dictionary-property",
                                 PropertyName = nameof(DefaultValidHtmlAttributePrefix.DictionaryProperty),
                                 TypeName = $"{dictionaryNamespace}<System.String, System.String>"
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "dictionary-property-",
                                 PropertyName = nameof(DefaultValidHtmlAttributePrefix.DictionaryProperty),
@@ -1668,13 +1668,13 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
                         typeof(SingleValidHtmlAttributePrefix),
                         new[]
                         {
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-name",
                                 PropertyName = nameof(SingleValidHtmlAttributePrefix.DictionaryProperty),
                                 TypeName = $"{dictionaryNamespace}<System.String, System.String>"
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-name-",
                                 PropertyName = nameof(SingleValidHtmlAttributePrefix.DictionaryProperty),
@@ -1688,86 +1688,86 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
                         typeof(MultipleValidHtmlAttributePrefix),
                         new[]
                         {
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-name1",
                                 PropertyName = nameof(MultipleValidHtmlAttributePrefix.DictionaryProperty),
                                 TypeName = $"{typeof(Dictionary<,>).Namespace}.Dictionary<System.String, System.Object>"
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-name2",
                                 PropertyName = nameof(MultipleValidHtmlAttributePrefix.DictionarySubclassProperty),
                                 TypeName = typeof(DictionarySubclass).FullName
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-name3",
                                 PropertyName = nameof(MultipleValidHtmlAttributePrefix.DictionaryWithoutParameterlessConstructorProperty),
                                 TypeName = typeof(DictionaryWithoutParameterlessConstructor).FullName
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-name4",
                                 PropertyName = nameof(MultipleValidHtmlAttributePrefix.GenericDictionarySubclassProperty),
                                 TypeName = typeof(GenericDictionarySubclass<object>).Namespace + ".GenericDictionarySubclass<System.Object>"
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-name5",
                                 PropertyName = nameof(MultipleValidHtmlAttributePrefix.SortedDictionaryProperty),
                                 TypeName = typeof(SortedDictionary<string, int>).Namespace + ".SortedDictionary<System.String, System.Int32>"
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-name6",
                                 PropertyName = nameof(MultipleValidHtmlAttributePrefix.StringProperty),
                                 TypeName = typeof(string).FullName,
                                 IsStringProperty = true,
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-prefix1-",
                                 PropertyName = nameof(MultipleValidHtmlAttributePrefix.DictionaryProperty),
                                 TypeName = typeof(object).FullName,
                                 IsIndexer = true
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-prefix2-",
                                 PropertyName = nameof(MultipleValidHtmlAttributePrefix.DictionarySubclassProperty),
                                 TypeName = typeof(string).FullName,
                                 IsIndexer = true
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-prefix3-",
                                 PropertyName = nameof(MultipleValidHtmlAttributePrefix.DictionaryWithoutParameterlessConstructorProperty),
                                 TypeName = typeof(string).FullName,
                                 IsIndexer = true
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-prefix4-",
                                 PropertyName = nameof(MultipleValidHtmlAttributePrefix.GenericDictionarySubclassProperty),
                                 TypeName = typeof(object).FullName,
                                 IsIndexer = true
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-prefix5-",
                                 PropertyName = nameof(MultipleValidHtmlAttributePrefix.SortedDictionaryProperty),
                                 TypeName = typeof(int).FullName,
                                 IsIndexer = true
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "get-only-dictionary-property-",
                                 PropertyName = nameof(MultipleValidHtmlAttributePrefix.GetOnlyDictionaryProperty),
                                 TypeName = typeof(int).FullName,
                                 IsIndexer = true
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-prefix6",
                                 PropertyName = nameof(MultipleValidHtmlAttributePrefix.GetOnlyDictionaryPropertyWithAttributePrefix),
@@ -1779,7 +1779,7 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
                     },
                     {
                         typeof(SingleInvalidHtmlAttributePrefix),
-                        Enumerable.Empty<TagHelperAttributeDescriptor>(),
+                        Enumerable.Empty<BoundAttributeDescriptor>(),
                         new[]
                         {
                             onError(
@@ -1791,7 +1791,7 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
                         typeof(MultipleInvalidHtmlAttributePrefix),
                         new[]
                         {
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "valid-name1",
                                 PropertyName = nameof(MultipleInvalidHtmlAttributePrefix.LongProperty),
@@ -1847,7 +1847,7 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
         public void ValidateTagHelperAttributeDescriptor_WithValidName_ReturnsTrue(string name)
         {
             // Arrange
-            var descriptor = new TagHelperAttributeDescriptor
+            var descriptor = new BoundAttributeDescriptor
             {
                 Name = name,
                 PropertyName = "ValidProperty",
@@ -1889,7 +1889,7 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
         public void ValidateTagHelperAttributeDescriptor_WithValidPrefix_ReturnsTrue(string prefix)
         {
             // Arrange
-            var descriptor = new TagHelperAttributeDescriptor
+            var descriptor = new BoundAttributeDescriptor
             {
                 Name = prefix,
                 PropertyName = "ValidProperty",
@@ -1937,7 +1937,7 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
             string[] expectedErrorMessages)
         {
             // Arrange
-            var descriptor = new TagHelperAttributeDescriptor
+            var descriptor = new BoundAttributeDescriptor
             {
                 Name = name,
                 PropertyName = "InvalidProperty",
@@ -1992,7 +1992,7 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
             string[] expectedErrorMessages)
         {
             // Arrange
-            var descriptor = new TagHelperAttributeDescriptor
+            var descriptor = new BoundAttributeDescriptor
             {
                 Name = prefix,
                 PropertyName = "InvalidProperty",
@@ -2117,7 +2117,7 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
         [MemberData(nameof(TagHelperWithPrefixData))]
         public void CreateDescriptors_WithPrefixes_ReturnsExpectedAttributeDescriptors(
             Type tagHelperType,
-            IEnumerable<TagHelperAttributeDescriptor> expectedAttributeDescriptors,
+            IEnumerable<BoundAttributeDescriptor> expectedAttributeDescriptors,
             string[] expectedErrorMessages)
         {
             // Arrange
@@ -2142,7 +2142,7 @@ public class DynamicTestTagHelper : {typeof(AspNetCore.Razor.TagHelpers.TagHelpe
             var descriptor = Assert.Single(descriptors);
             Assert.Equal(
                 expectedAttributeDescriptors,
-                descriptor.Attributes,
+                descriptor.BoundAttributes,
                 TagHelperAttributeDescriptorComparer.Default);
         }
 
@@ -2372,7 +2372,7 @@ public class DocumentedTagHelper : " + typeof(AspNetCore.Razor.TagHelpers.TagHel
             // Assert
             Assert.Empty(errorSink.Errors);
             var attributeDescriptors = descriptors
-                .SelectMany(descriptor => descriptor.Attributes)
+                .SelectMany(descriptor => descriptor.BoundAttributes)
                 .Select(descriptor => descriptor.DesignTimeDescriptor);
             Assert.Equal(expectedDescriptors, attributeDescriptors, TagHelperAttributeDesignTimeDescriptorComparer.Default);
         }
@@ -2606,24 +2606,24 @@ public class DocumentedTagHelper : " + typeof(AspNetCore.Razor.TagHelpers.TagHel
             string tagName,
             string typeName,
             string assemblyName,
-            IEnumerable<TagHelperAttributeDescriptor> attributes = null,
-            IEnumerable<TagHelperRequiredAttributeDescriptor> requiredAttributes = null)
+            IEnumerable<BoundAttributeDescriptor> attributes = null,
+            IEnumerable<RequiredAttributeDescriptor> requiredAttributes = null)
         {
             return new TagHelperDescriptor
             {
                 TagName = tagName,
                 TypeName = typeName,
                 AssemblyName = assemblyName,
-                Attributes = attributes ?? Enumerable.Empty<TagHelperAttributeDescriptor>(),
-                RequiredAttributes = requiredAttributes ?? Enumerable.Empty<TagHelperRequiredAttributeDescriptor>()
+                Attributes = attributes ?? Enumerable.Empty<BoundAttributeDescriptor>(),
+                RequiredAttributes = requiredAttributes ?? Enumerable.Empty<RequiredAttributeDescriptor>()
             };
         }
 
-        private static TagHelperAttributeDescriptor CreateTagHelperAttributeDescriptor(
+        private static BoundAttributeDescriptor CreateTagHelperAttributeDescriptor(
             string name,
             PropertyInfo propertyInfo)
         {
-            return new TagHelperAttributeDescriptor
+            return new BoundAttributeDescriptor
             {
                 Name = name,
                 PropertyName = propertyInfo.Name,

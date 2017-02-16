@@ -42,7 +42,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                     visitor.VisitBlock(import.Root);
                 }
             }
-            
+
             visitor.VisitBlock(syntaxTree.Root);
 
             var errorSink = new ErrorSink();
@@ -50,6 +50,8 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             var descriptors = (IReadOnlyList<TagHelperDescriptor>)resolver.Resolve(errorSink).ToList();
 
             descriptors = ProcessDirectives(directives, descriptors, errorSink);
+
+            var tagHelperPrefix = ProcessTagHelperPrefix(directives, codeDocument, errorSink);
 
             if (descriptors.Count == 0)
             {
@@ -63,8 +65,8 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                 return syntaxTree;
             }
 
-            var descriptorProvider = new TagHelperDescriptorProvider(descriptors);
-            var rewriter = new TagHelperParseTreeRewriter(descriptorProvider);
+            var descriptorProvider = new TagHelperDescriptorProvider(tagHelperPrefix, descriptors);
+            var rewriter = new TagHelperParseTreeRewriter(tagHelperPrefix, descriptorProvider);
             var rewrittenRoot = rewriter.Rewrite(syntaxTree.Root, errorSink);
             var diagnostics = syntaxTree.Diagnostics;
 
@@ -77,15 +79,40 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             return newSyntaxTree;
         }
 
+        private string ProcessTagHelperPrefix(List<TagHelperDirectiveDescriptor> directives, RazorCodeDocument codeDocument, ErrorSink errorSink)
+        {
+            // We only support a single prefix directive.
+            TagHelperDirectiveDescriptor prefixDirective = null;
+            for (var i = 0; i < directives.Count; i++)
+            {
+                if (directives[i].DirectiveType == TagHelperDirectiveType.TagHelperPrefix)
+                {
+                    // We only expect to see a single one of these per file, but that's enforced at another level.
+                    prefixDirective = directives[i];
+                }
+            }
+
+            var prefix = prefixDirective?.DirectiveText;
+            if (prefix != null && !IsValidTagHelperPrefix(prefix, prefixDirective.Location, errorSink))
+            {
+                prefix = null;
+            }
+
+            if (!string.IsNullOrEmpty(prefix))
+            {
+                codeDocument.SetTagHelperPrefix(prefixDirective.DirectiveText);
+                return prefixDirective.DirectiveText;
+            }
+
+            return null;
+        }
+
         internal IReadOnlyList<TagHelperDescriptor> ProcessDirectives(
             IReadOnlyList<TagHelperDirectiveDescriptor> directives,
             IReadOnlyList<TagHelperDescriptor> tagHelpers,
             ErrorSink errorSink)
         {
             var matches = new HashSet<TagHelperDescriptor>(TagHelperDescriptorComparer.Default);
-
-            // We only support a single prefix directive.
-            TagHelperDirectiveDescriptor prefixDirective = null;
 
             for (var i = 0; i < directives.Count; i++)
             {
@@ -156,23 +183,10 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         }
 
                         break;
-
-                    case TagHelperDirectiveType.TagHelperPrefix:
-
-                        // We only expect to see a single one of these per file, but that's enforced at another level.
-                        prefixDirective = directive;
-
-                        break;
                 }
             }
 
-            var prefix = prefixDirective?.DirectiveText;
-            if (prefix != null && !IsValidTagHelperPrefix(prefix, prefixDirective.Location, errorSink))
-            {
-                prefix = null;
-            }
-
-            return PrefixDescriptors(prefix, matches);
+            return matches.ToArray();
         }
 
         private bool AssemblyContainsTagHelpers(string assemblyName, IReadOnlyList<TagHelperDescriptor> tagHelpers)
@@ -253,27 +267,20 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             return true;
         }
 
-        private static IReadOnlyList<TagHelperDescriptor> PrefixDescriptors(
-            string prefix,
-            IEnumerable<TagHelperDescriptor> descriptors)
-        {
-            if (!string.IsNullOrEmpty(prefix))
-            {
-                return descriptors.Select(descriptor => new TagHelperDescriptor(descriptor)
-                {
-                    Prefix = prefix
-                }).ToList();
-            }
-
-            return descriptors.ToList();
-        }
-
         private static bool MatchesDirective(TagHelperDescriptor descriptor, ParsedDirective lookupInfo)
         {
             if (!string.Equals(descriptor.AssemblyName, lookupInfo.AssemblyName, StringComparison.Ordinal))
             {
                 return false;
             }
+
+            if (descriptor.Kind != ITagHelperDescriptorBuilder.DescriptorKind)
+            {
+                // We only understand TagHelperDescriptors generated from ITagHelpers.
+                return false;
+            }
+
+            var descriptorTypeName = descriptor.Metadata[ITagHelperDescriptorBuilder.TypeNameKey];
 
             if (lookupInfo.TypePattern.EndsWith("*", StringComparison.Ordinal))
             {
@@ -285,10 +292,10 @@ namespace Microsoft.AspNetCore.Razor.Evolution
 
                 var lookupTypeName = lookupInfo.TypePattern.Substring(0, lookupInfo.TypePattern.Length - 1);
 
-                return descriptor.TypeName.StartsWith(lookupTypeName, StringComparison.Ordinal);
+                return descriptorTypeName.StartsWith(lookupTypeName, StringComparison.Ordinal);
             }
 
-            return string.Equals(descriptor.TypeName, lookupInfo.TypePattern, StringComparison.Ordinal);
+            return string.Equals(descriptorTypeName, lookupInfo.TypePattern, StringComparison.Ordinal);
         }
 
         private static int GetErrorLength(string directiveText)

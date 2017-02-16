@@ -8,15 +8,15 @@ using System.Linq;
 
 namespace Microsoft.AspNetCore.Razor.Evolution
 {
-    public abstract class TagHelperRequiredAttributeDescriptor
+    public abstract class RequiredAttributeDescriptor
     {
         public string Name { get; protected set; }
 
-        public TagHelperRequiredAttributeNameComparison NameComparison { get; protected set; }
+        public NameComparisonMode NameComparison { get; protected set; }
 
         public string Value { get; protected set; }
 
-        public TagHelperRequiredAttributeValueComparison ValueComparison { get; protected set; }
+        public ValueComparisonMode ValueComparison { get; protected set; }
 
         public IEnumerable<RazorDiagnostic> Diagnostics { get; protected set; }
 
@@ -31,21 +31,21 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         }
 
         /// <summary>
-        /// Determines if the current <see cref="TagHelperRequiredAttributeDescriptor"/> matches the given
+        /// Determines if the current <see cref="RequiredAttributeDescriptor"/> matches the given
         /// <paramref name="attributeName"/> and <paramref name="attributeValue"/>.
         /// </summary>
         /// <param name="attributeName">An HTML attribute name.</param>
         /// <param name="attributeValue">An HTML attribute value.</param>
-        /// <returns><c>true</c> if the current <see cref="TagHelperRequiredAttributeDescriptor"/> matches
+        /// <returns><c>true</c> if the current <see cref="RequiredAttributeDescriptor"/> matches
         /// <paramref name="attributeName"/> and <paramref name="attributeValue"/>; <c>false</c> otherwise.</returns>
         public bool IsMatch(string attributeName, string attributeValue)
         {
             var nameMatches = false;
-            if (NameComparison == TagHelperRequiredAttributeNameComparison.FullMatch)
+            if (NameComparison == NameComparisonMode.FullMatch)
             {
                 nameMatches = string.Equals(Name, attributeName, StringComparison.OrdinalIgnoreCase);
             }
-            else if (NameComparison == TagHelperRequiredAttributeNameComparison.PrefixMatch)
+            else if (NameComparison == NameComparisonMode.PrefixMatch)
             {
                 // attributeName cannot equal the Name if comparing as a PrefixMatch.
                 nameMatches = attributeName.Length != Name.Length &&
@@ -63,18 +63,60 @@ namespace Microsoft.AspNetCore.Razor.Evolution
 
             switch (ValueComparison)
             {
-                case TagHelperRequiredAttributeValueComparison.None:
+                case ValueComparisonMode.None:
                     return true;
-                case TagHelperRequiredAttributeValueComparison.PrefixMatch: // Value starts with
+                case ValueComparisonMode.PrefixMatch: // Value starts with
                     return attributeValue.StartsWith(Value, StringComparison.Ordinal);
-                case TagHelperRequiredAttributeValueComparison.SuffixMatch: // Value ends with
+                case ValueComparisonMode.SuffixMatch: // Value ends with
                     return attributeValue.EndsWith(Value, StringComparison.Ordinal);
-                case TagHelperRequiredAttributeValueComparison.FullMatch: // Value equals
+                case ValueComparisonMode.FullMatch: // Value equals
                     return string.Equals(attributeValue, Value, StringComparison.Ordinal);
                 default:
                     Debug.Assert(false, "Unknown value comparison.");
                     return false;
             }
+        }
+
+        /// <summary>
+        /// Acceptable <see cref="RequiredAttributeDescriptor.Name"/> comparison modes.
+        /// </summary>
+        public enum NameComparisonMode
+        {
+            /// <summary>
+            /// HTML attribute name case insensitively matches <see cref="RequiredAttributeDescriptor.Name"/>.
+            /// </summary>
+            FullMatch,
+
+            /// <summary>
+            /// HTML attribute name case insensitively starts with <see cref="RequiredAttributeDescriptor.Name"/>.
+            /// </summary>
+            PrefixMatch,
+        }
+
+        /// <summary>
+        /// Acceptable <see cref="RequiredAttributeDescriptor.Value"/> comparison modes.
+        /// </summary>
+        public enum ValueComparisonMode
+        {
+            /// <summary>
+            /// HTML attribute value always matches <see cref="RequiredAttributeDescriptor.Value"/>.
+            /// </summary>
+            None,
+
+            /// <summary>
+            /// HTML attribute value case sensitively matches <see cref="RequiredAttributeDescriptor.Value"/>.
+            /// </summary>
+            FullMatch,
+
+            /// <summary>
+            /// HTML attribute value case sensitively starts with <see cref="RequiredAttributeDescriptor.Value"/>.
+            /// </summary>
+            PrefixMatch,
+
+            /// <summary>
+            /// HTML attribute value case sensitively ends with <see cref="RequiredAttributeDescriptor.Value"/>.
+            /// </summary>
+            SuffixMatch,
         }
     }
 }

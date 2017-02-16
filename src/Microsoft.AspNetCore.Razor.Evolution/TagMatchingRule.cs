@@ -6,15 +6,15 @@ using System.Linq;
 
 namespace Microsoft.AspNetCore.Razor.Evolution
 {
-    public abstract class CorrelationRule
+    public abstract class TagMatchingRule
     {
         private IEnumerable<RazorDiagnostic> _allDiagnostics;
 
         public string TagName { get; protected set; }
 
-        public IEnumerable<TagHelperRequiredAttributeDescriptor> Attributes { get; protected set; }
+        public IEnumerable<RequiredAttributeDescriptor> Attributes { get; protected set; }
 
-        public string Parent { get; protected set; }
+        public string ParentTag { get; protected set; }
 
         public TagStructure TagStructure { get; protected set; }
 
@@ -35,8 +35,8 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         {
             if (_allDiagnostics == null)
             {
-                var requiredAttributeDiagnostics = Attributes.SelectMany(attribute => attribute.Diagnostics);
-                var combinedDiagnostics = Diagnostics.Concat(requiredAttributeDiagnostics);
+                var attributeDiagnostics = Attributes.SelectMany(attribute => attribute.Diagnostics);
+                var combinedDiagnostics = Diagnostics.Concat(attributeDiagnostics);
                 _allDiagnostics = combinedDiagnostics.ToArray();
             }
 

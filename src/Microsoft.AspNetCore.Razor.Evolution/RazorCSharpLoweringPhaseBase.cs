@@ -71,11 +71,12 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         protected static string GetTagHelperPropertyAccessor(
             string tagHelperVariableName,
             string attributeName,
-            TagHelperAttributeDescriptor descriptor)
+            BoundAttributeDescriptor descriptor)
         {
-            var propertyAccessor = $"{tagHelperVariableName}.{descriptor.PropertyName}";
+            var propertyName = descriptor.Metadata[ITagHelperBoundAttributeDescriptorBuilder.PropertyNameKey];
+            var propertyAccessor = $"{tagHelperVariableName}.{propertyName}";
 
-            if (descriptor.IsIndexer)
+            if (descriptor.KeyValueAttributeNamePrefix != null)
             {
                 var dictionaryKey = attributeName.Substring(descriptor.Name.Length);
                 propertyAccessor += $"[\"{dictionaryKey}\"]";

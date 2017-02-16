@@ -19,7 +19,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces.Test.Comparers
         {
         }
 
-        public override bool Equals(TagHelperRequiredAttributeDescriptor descriptorX, TagHelperRequiredAttributeDescriptor descriptorY)
+        public override bool Equals(RequiredAttributeDescriptor descriptorX, RequiredAttributeDescriptor descriptorY)
         {
             if (descriptorX == descriptorY)
             {
@@ -32,7 +32,7 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces.Test.Comparers
             return true;
         }
 
-        public override int GetHashCode(TagHelperRequiredAttributeDescriptor descriptor)
+        public override int GetHashCode(RequiredAttributeDescriptor descriptor)
         {
             var hashCodeCombiner = HashCodeCombiner.Start();
             hashCodeCombiner.Add(base.GetHashCode(descriptor));

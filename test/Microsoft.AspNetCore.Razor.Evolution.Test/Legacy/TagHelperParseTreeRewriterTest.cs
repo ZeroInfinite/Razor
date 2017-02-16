@@ -766,7 +766,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         TagName = "strong",
                         TypeName = "StrongTagHelper",
                         AssemblyName = "SomeAssembly",
-                        RequiredAttributes = new[] { new TagHelperRequiredAttributeDescriptor { Name = "required" } },
+                        RequiredAttributes = new[] { new RequiredAttributeDescriptor { Name = "required" } },
                         AllowedChildren = new[] { "br" }
                     }
                 };
@@ -1698,7 +1698,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         TagName = "p",
                         TypeName = "pTagHelper",
                         AssemblyName = "SomeAssembly",
-                        RequiredAttributes = new[] { new TagHelperRequiredAttributeDescriptor { Name = "class" } }
+                        RequiredAttributes = new[] { new RequiredAttributeDescriptor { Name = "class" } }
                     },
                     new TagHelperDescriptor
                     {
@@ -1707,8 +1707,8 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         AssemblyName = "SomeAssembly",
                         RequiredAttributes = new[]
                         {
-                            new TagHelperRequiredAttributeDescriptor { Name = "class" },
-                            new TagHelperRequiredAttributeDescriptor { Name = "style" }
+                            new RequiredAttributeDescriptor { Name = "class" },
+                            new RequiredAttributeDescriptor { Name = "style" }
                         }
                     },
                     new TagHelperDescriptor
@@ -1716,7 +1716,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         TagName = "*",
                         TypeName = "catchAllTagHelper",
                         AssemblyName = "SomeAssembly",
-                        RequiredAttributes = new[] { new TagHelperRequiredAttributeDescriptor { Name = "catchAll" } }
+                        RequiredAttributes = new[] { new RequiredAttributeDescriptor { Name = "catchAll" } }
                     }
                 };
             var descriptorProvider = new TagHelperDescriptorProvider(descriptors);
@@ -1965,14 +1965,14 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         TagName = "p",
                         TypeName = "pTagHelper",
                         AssemblyName = "SomeAssembly",
-                        RequiredAttributes = new[] { new TagHelperRequiredAttributeDescriptor { Name = "class" } }
+                        RequiredAttributes = new[] { new RequiredAttributeDescriptor { Name = "class" } }
                     },
                     new TagHelperDescriptor
                     {
                         TagName = "*",
                         TypeName = "catchAllTagHelper",
                         AssemblyName = "SomeAssembly",
-                        RequiredAttributes = new[] { new TagHelperRequiredAttributeDescriptor { Name = "catchAll" } }
+                        RequiredAttributes = new[] { new RequiredAttributeDescriptor { Name = "catchAll" } }
                     }
                 };
             var descriptorProvider = new TagHelperDescriptorProvider(descriptors);
@@ -2189,7 +2189,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         TagName = "p",
                         TypeName = "pTagHelper",
                         AssemblyName = "SomeAssembly",
-                        RequiredAttributes = new[] { new TagHelperRequiredAttributeDescriptor { Name = "class" } }
+                        RequiredAttributes = new[] { new RequiredAttributeDescriptor { Name = "class" } }
                     }
                 };
             var descriptorProvider = new TagHelperDescriptorProvider(descriptors);
@@ -2221,7 +2221,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         AssemblyName = "SomeAssembly",
                         Attributes = new []
                         {
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "bound",
                                 PropertyName = "Bound",
@@ -2247,7 +2247,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         AssemblyName = "SomeAssembly",
                         Attributes = new []
                         {
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "bound",
                                 PropertyName = "Bound",

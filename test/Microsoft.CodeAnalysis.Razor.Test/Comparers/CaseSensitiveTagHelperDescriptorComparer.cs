@@ -39,14 +39,14 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces.Test.Comparers
                 CaseSensitiveTagHelperRequiredAttributeDescriptorComparer.Default);
             Assert.Equal(descriptorX.RequiredParent, descriptorY.RequiredParent, StringComparer.Ordinal);
 
-            if (descriptorX.AllowedChildren != descriptorY.AllowedChildren)
+            if (descriptorX.AllowedChildTags != descriptorY.AllowedChildTags)
             {
-                Assert.Equal(descriptorX.AllowedChildren, descriptorY.AllowedChildren, StringComparer.Ordinal);
+                Assert.Equal(descriptorX.AllowedChildTags, descriptorY.AllowedChildTags, StringComparer.Ordinal);
             }
 
             Assert.Equal(
-                descriptorX.Attributes,
-                descriptorY.Attributes,
+                descriptorX.BoundAttributes,
+                descriptorY.BoundAttributes,
                 TagHelperAttributeDescriptorComparer.Default);
             Assert.Equal(
                 descriptorX.DesignTimeDescriptor,
@@ -75,15 +75,15 @@ namespace Microsoft.CodeAnalysis.Razor.Workspaces.Test.Comparers
                     CaseSensitiveTagHelperRequiredAttributeDescriptorComparer.Default.GetHashCode(requiredAttribute));
             }
 
-            if (descriptor.AllowedChildren != null)
+            if (descriptor.AllowedChildTags != null)
             {
-                foreach (var child in descriptor.AllowedChildren.OrderBy(child => child))
+                foreach (var child in descriptor.AllowedChildTags.OrderBy(child => child))
                 {
                     hashCodeCombiner.Add(child, StringComparer.Ordinal);
                 }
             }
 
-            var orderedAttributeHashCodes = descriptor.Attributes
+            var orderedAttributeHashCodes = descriptor.BoundAttributes
                 .Select(attribute => TagHelperAttributeDescriptorComparer.Default.GetHashCode(attribute))
                 .OrderBy(hashcode => hashcode);
             foreach (var attributeHashCode in orderedAttributeHashCodes)

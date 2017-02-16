@@ -68,9 +68,9 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         AssemblyName = "TestAssembly",
                         TagName = "form",
                         TypeName = "TestFormTagHelper",
-                        RequiredAttributes = new List<TagHelperRequiredAttributeDescriptor>()
+                        RequiredAttributes = new List<RequiredAttributeDescriptor>()
                         {
-                             new TagHelperRequiredAttributeDescriptor()
+                             new RequiredAttributeDescriptor()
                              {
                                  Name = "a",
                                  NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch
@@ -82,9 +82,9 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         AssemblyName = "TestAssembly",
                         TagName = "form",
                         TypeName = "TestFormTagHelper",
-                        RequiredAttributes = new List<TagHelperRequiredAttributeDescriptor>()
+                        RequiredAttributes = new List<RequiredAttributeDescriptor>()
                         {
-                             new TagHelperRequiredAttributeDescriptor()
+                             new RequiredAttributeDescriptor()
                              {
                                  Name = "b",
                                  NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch
@@ -117,7 +117,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
 
             var formTagHelper = Assert.IsType<TagHelperBlock>(rewrittenTree.Root.Children[2]);
             Assert.Equal("form", formTagHelper.TagName);
-            Assert.Single(formTagHelper.Descriptors);
+            Assert.Single(formTagHelper.BindingResult);
         }
 
         [Fact]
@@ -133,9 +133,9 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         AssemblyName = "TestAssembly",
                         TagName = "form",
                         TypeName = "TestFormTagHelper",
-                        RequiredAttributes = new List<TagHelperRequiredAttributeDescriptor>()
+                        RequiredAttributes = new List<RequiredAttributeDescriptor>()
                         {
-                             new TagHelperRequiredAttributeDescriptor()
+                             new RequiredAttributeDescriptor()
                              {
                                  Name = "a",
                                  NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch
@@ -147,9 +147,9 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                         AssemblyName = "TestAssembly",
                         TagName = "form",
                         TypeName = "TestFormTagHelper",
-                        RequiredAttributes = new List<TagHelperRequiredAttributeDescriptor>()
+                        RequiredAttributes = new List<RequiredAttributeDescriptor>()
                         {
-                             new TagHelperRequiredAttributeDescriptor()
+                             new RequiredAttributeDescriptor()
                              {
                                  Name = "b",
                                  NameComparison = TagHelperRequiredAttributeNameComparison.FullMatch
@@ -182,7 +182,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
 
             var formTagHelper = Assert.IsType<TagHelperBlock>(rewrittenTree.Root.Children[2]);
             Assert.Equal("form", formTagHelper.TagName);
-            Assert.Single(formTagHelper.Descriptors);
+            Assert.Single(formTagHelper.BindingResult);
         }
 
         [Fact]

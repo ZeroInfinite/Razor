@@ -7,17 +7,8 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
 {
     internal class TagHelperChunkGenerator : ParentChunkGenerator
     {
-        private IEnumerable<TagHelperDescriptor> _tagHelperDescriptors;
-
-        /// <summary>
-        /// Instantiates a new <see cref="TagHelperChunkGenerator"/>.
-        /// </summary>
-        /// <param name="tagHelperDescriptors">
-        /// <see cref="TagHelperDescriptor"/>s associated with the current HTML tag.
-        /// </param>
-        public TagHelperChunkGenerator(IEnumerable<TagHelperDescriptor> tagHelperDescriptors)
+        public TagHelperChunkGenerator()
         {
-            _tagHelperDescriptors = tagHelperDescriptors;
         }
 
         public override void GenerateStartParentChunk(Block target, ChunkGeneratorContext context)

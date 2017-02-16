@@ -118,44 +118,44 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                     AssemblyName = "SomeAssembly",
                     Attributes = new[]
                     {
-                        new TagHelperAttributeDescriptor
+                        new BoundAttributeDescriptor
                         {
                             Name = "[item]",
                             PropertyName = "ListItems",
                             TypeName = typeof(List<string>).FullName
                         },
-                        new TagHelperAttributeDescriptor
+                        new BoundAttributeDescriptor
                         {
                             Name = "[(item)]",
                             PropertyName = "ArrayItems",
                             TypeName = typeof(string[]).FullName
                         },
-                        new TagHelperAttributeDescriptor
+                        new BoundAttributeDescriptor
                         {
                             Name = "(click)",
                             PropertyName = "Event1",
                             TypeName = typeof(Action).FullName
                         },
-                        new TagHelperAttributeDescriptor
+                        new BoundAttributeDescriptor
                         {
                             Name = "(^click)",
                             PropertyName = "Event2",
                             TypeName = typeof(Action).FullName
                         },
-                        new TagHelperAttributeDescriptor
+                        new BoundAttributeDescriptor
                         {
                             Name = "*something",
                             PropertyName = "StringProperty1",
                             TypeName = typeof(string).FullName
                         },
-                        new TagHelperAttributeDescriptor
+                        new BoundAttributeDescriptor
                         {
                             Name = "#local",
                             PropertyName = "StringProperty2",
                             TypeName = typeof(string).FullName
                         },
                     },
-                    RequiredAttributes = new[] { new TagHelperRequiredAttributeDescriptor { Name = "bound" } },
+                    RequiredAttributes = new[] { new RequiredAttributeDescriptor { Name = "bound" } },
                 },
             };
             var descriptorProvider = new TagHelperDescriptorProvider(descriptors);
@@ -1213,19 +1213,19 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                     AssemblyName = "personAssembly",
                     Attributes = new[]
                     {
-                        new TagHelperAttributeDescriptor
+                        new BoundAttributeDescriptor
                         {
                             Name = "age",
                             PropertyName = "Age",
                             TypeName = typeof(int).FullName
                         },
-                        new TagHelperAttributeDescriptor
+                        new BoundAttributeDescriptor
                         {
                             Name = "birthday",
                             PropertyName = "BirthDay",
                             TypeName = typeof(DateTime).FullName
                         },
-                        new TagHelperAttributeDescriptor
+                        new BoundAttributeDescriptor
                         {
                             Name = "name",
                             PropertyName = "Name",
@@ -2261,13 +2261,13 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         AssemblyName = "SomeAssembly",
                         Attributes = new[]
                         {
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "bound",
                                 PropertyName = "Bound",
                                 TypeName = typeof(bool).FullName
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "name",
                                 PropertyName = "Name",
@@ -3919,7 +3919,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         AssemblyName = "SomeAssembly",
                         Attributes = new[]
                         {
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "bound-required-string",
                                 PropertyName = "BoundRequiredString",
@@ -3929,7 +3929,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         },
                         RequiredAttributes = new[]
                         {
-                            new TagHelperRequiredAttributeDescriptor { Name = "unbound-required" }
+                            new RequiredAttributeDescriptor { Name = "unbound-required" }
                         }
                     },
                     new TagHelperDescriptor
@@ -3939,7 +3939,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         AssemblyName = "SomeAssembly",
                         Attributes = new[]
                         {
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "bound-required-string",
                                 PropertyName = "BoundRequiredString",
@@ -3949,7 +3949,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         },
                         RequiredAttributes = new[]
                         {
-                            new TagHelperRequiredAttributeDescriptor { Name = "bound-required-string" }
+                            new RequiredAttributeDescriptor { Name = "bound-required-string" }
                         }
                     },
                     new TagHelperDescriptor
@@ -3959,7 +3959,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         AssemblyName = "SomeAssembly",
                         Attributes = new[]
                         {
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "bound-required-int",
                                 PropertyName = "BoundRequiredInt",
@@ -3968,7 +3968,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         },
                         RequiredAttributes = new[]
                         {
-                            new TagHelperRequiredAttributeDescriptor { Name = "bound-required-int" }
+                            new RequiredAttributeDescriptor { Name = "bound-required-int" }
                         }
                     },
                     new TagHelperDescriptor
@@ -3978,26 +3978,26 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         AssemblyName = "SomeAssembly",
                         Attributes = new[]
                         {
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "int-dictionary",
                                 PropertyName ="DictionaryOfIntProperty",
                                 TypeName = typeof(IDictionary<string, int>).FullName
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "string-dictionary",
                                 PropertyName = "DictionaryOfStringProperty",
                                 TypeName = typeof(IDictionary<string, string>).FullName
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "int-prefix-",
                                 PropertyName = "DictionaryOfIntProperty",
                                 TypeName = typeof(int).FullName,
                                 IsIndexer = true
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "string-prefix-",
                                 PropertyName = "DictionaryOfStringProperty",
@@ -4014,14 +4014,14 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                         AssemblyName = "SomeAssembly",
                         Attributes = new[]
                         {
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "bound-string",
                                 PropertyName = "BoundRequiredString",
                                 TypeName = typeof(string).FullName,
                                 IsStringProperty = true
                             },
-                            new TagHelperAttributeDescriptor
+                            new BoundAttributeDescriptor
                             {
                                 Name = "bound-int",
                                 PropertyName = "BoundRequiredString",

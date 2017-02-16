@@ -3,19 +3,4 @@
 
 namespace Microsoft.AspNetCore.Razor.Evolution
 {
-    /// <summary>
-    /// Acceptable <see cref="TagHelperRequiredAttributeDescriptor.Name"/> comparison modes.
-    /// </summary>
-    public enum TagHelperRequiredAttributeNameComparison
-    {
-        /// <summary>
-        /// HTML attribute name case insensitively matches <see cref="TagHelperRequiredAttributeDescriptor.Name"/>.
-        /// </summary>
-        FullMatch,
-
-        /// <summary>
-        /// HTML attribute name case insensitively starts with <see cref="TagHelperRequiredAttributeDescriptor.Name"/>.
-        /// </summary>
-        PrefixMatch,
-    }
 }

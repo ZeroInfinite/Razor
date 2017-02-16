@@ -7,52 +7,52 @@ using System.Linq;
 
 namespace Microsoft.AspNetCore.Razor.Evolution
 {
-    public class CorrelationRuleBuilder
+    public sealed class TagMatchingRuleBuilder
     {
         private string _tagName;
-        private string _parent;
+        private string _parentTag;
         private TagStructure _tagStructure;
         private List<RazorDiagnostic> _diagnostics;
-        private List<TagHelperRequiredAttributeDescriptor> _requiredAttributeDescriptors;
+        private List<RequiredAttributeDescriptor> _requiredAttributeDescriptors;
 
-        private CorrelationRuleBuilder()
+        private TagMatchingRuleBuilder()
         {
         }
 
-        public static CorrelationRuleBuilder Create()
+        public static TagMatchingRuleBuilder Create()
         {
-            return new CorrelationRuleBuilder();
+            return new TagMatchingRuleBuilder();
         }
 
-        public CorrelationRuleBuilder RequireTagName(string tagName)
+        public TagMatchingRuleBuilder RequireTagName(string tagName)
         {
             _tagName = tagName;
 
             return this;
         }
 
-        public CorrelationRuleBuilder RequireParent(string parent)
+        public TagMatchingRuleBuilder RequireParentTag(string parentTag)
         {
-            _parent = parent;
+            _parentTag = parentTag;
 
             return this;
         }
 
-        public CorrelationRuleBuilder RequireTagStructure(TagStructure tagStructure)
+        public TagMatchingRuleBuilder RequireTagStructure(TagStructure tagStructure)
         {
             _tagStructure = tagStructure;
 
             return this;
         }
 
-        public CorrelationRuleBuilder RequireAttribute(Action<RequiredTagHelperAttributeDescriptorBuilder> configure)
+        public TagMatchingRuleBuilder RequireAttribute(Action<RequiredAttributeDescriptorBuilder> configure)
         {
             if (configure == null)
             {
                 throw new ArgumentNullException(nameof(configure));
             }
 
-            var builder = RequiredTagHelperAttributeDescriptorBuilder.Create();
+            var builder = RequiredAttributeDescriptorBuilder.Create();
 
             configure(builder);
 
@@ -64,13 +64,13 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             return this;
         }
 
-        public CorrelationRule Build()
+        public TagMatchingRule Build()
         {
-            var rule = new DefaultCorrelationRule(
+            var rule = new DefaultTagMatchingRule(
                 _tagName,
-                _parent,
+                _parentTag,
                 _tagStructure,
-                _requiredAttributeDescriptors ?? Enumerable.Empty<TagHelperRequiredAttributeDescriptor>(),
+                _requiredAttributeDescriptors ?? Enumerable.Empty<RequiredAttributeDescriptor>(),
                 _diagnostics ?? Enumerable.Empty<RazorDiagnostic>());
 
             return rule;
@@ -80,21 +80,21 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         {
             if (_requiredAttributeDescriptors == null)
             {
-                _requiredAttributeDescriptors = new List<TagHelperRequiredAttributeDescriptor>();
+                _requiredAttributeDescriptors = new List<RequiredAttributeDescriptor>();
             }
         }
 
-        private class DefaultCorrelationRule : CorrelationRule
+        private class DefaultTagMatchingRule : TagMatchingRule
         {
-            public DefaultCorrelationRule(
+            public DefaultTagMatchingRule(
                 string tagName,
-                string parent,
+                string parentTag,
                 TagStructure tagStructure,
-                IEnumerable<TagHelperRequiredAttributeDescriptor> requiredAttributeDescriptors,
+                IEnumerable<RequiredAttributeDescriptor> requiredAttributeDescriptors,
                 IEnumerable<RazorDiagnostic> diagnostics)
             {
                 TagName = tagName;
-                Parent = parent;
+                ParentTag = parentTag;
                 TagStructure = tagStructure;
                 Attributes = requiredAttributeDescriptors;
                 Diagnostics = diagnostics;

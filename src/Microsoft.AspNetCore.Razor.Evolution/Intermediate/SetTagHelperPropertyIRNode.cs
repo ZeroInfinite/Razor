@@ -23,7 +23,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Intermediate
 
         internal HtmlAttributeValueStyle ValueStyle { get; set; }
 
-        public TagHelperAttributeDescriptor Descriptor { get; set; }
+        public BoundAttributeDescriptor Descriptor { get; set; }
 
         public override void Accept(RazorIRNodeVisitor visitor)
         {

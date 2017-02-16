@@ -19,7 +19,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             : base(original)
         {
             TagName = original.TagName;
-            Descriptors = original.Descriptors;
+            BindingResult = original.BindingResult;
             Attributes = new List<TagHelperAttributeNode>(original.Attributes);
         }
 
@@ -38,15 +38,15 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             TagMode tagMode,
             SourceLocation start,
             IList<TagHelperAttributeNode> attributes,
-            IEnumerable<TagHelperDescriptor> descriptors)
+            TagBindingResult bindingResult)
         {
             TagName = tagName;
             TagMode = tagMode;
             Start = start;
-            Descriptors = descriptors;
+            BindingResult = bindingResult;
             Attributes = new List<TagHelperAttributeNode>(attributes);
             Type = BlockType.Tag;
-            ChunkGenerator = new TagHelperChunkGenerator(descriptors);
+            ChunkGenerator = new TagHelperChunkGenerator();
         }
 
         // Internal for testing
@@ -60,7 +60,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             TagMode = tagMode;
             Attributes = attributes;
             Type = BlockType.Tag;
-            ChunkGenerator = new TagHelperChunkGenerator(tagHelperDescriptors: null);
+            ChunkGenerator = new TagHelperChunkGenerator();
 
             // Children is IList, no AddRange
             foreach (var child in children)
@@ -89,7 +89,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
         /// <summary>
         /// <see cref="TagHelperDescriptor"/>s for the HTML element.
         /// </summary>
-        public IEnumerable<TagHelperDescriptor> Descriptors { get; }
+        public TagBindingResult BindingResult { get; }
 
         /// <summary>
         /// The HTML attributes.

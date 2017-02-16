@@ -42,7 +42,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.IntegrationTests
                     TagName = "input",
                     TypeName = "InputTagHelper",
                     AssemblyName = "TestAssembly",
-                    Attributes = new[] { new TagHelperAttributeDescriptor
+                    Attributes = new[] { new BoundAttributeDescriptor
                     {
                         Name = "bound",
                         PropertyName = "FooProp",
@@ -84,7 +84,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.IntegrationTests
                     TagName = "input",
                     TypeName = "InputTagHelper",
                     AssemblyName = "TestAssembly",
-                    Attributes = new[] { new TagHelperAttributeDescriptor
+                    Attributes = new[] { new BoundAttributeDescriptor
                     {
                         Name = "value",
                         PropertyName = "FooProp",

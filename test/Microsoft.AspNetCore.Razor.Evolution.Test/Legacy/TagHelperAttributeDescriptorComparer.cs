@@ -8,7 +8,7 @@ using Xunit;
 
 namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
 {
-    internal class TagHelperAttributeDescriptorComparer : IEqualityComparer<TagHelperAttributeDescriptor>
+    internal class TagHelperAttributeDescriptorComparer : IEqualityComparer<BoundAttributeDescriptor>
     {
         public static readonly TagHelperAttributeDescriptorComparer Default =
             new TagHelperAttributeDescriptorComparer();
@@ -17,7 +17,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
         {
         }
 
-        public bool Equals(TagHelperAttributeDescriptor descriptorX, TagHelperAttributeDescriptor descriptorY)
+        public bool Equals(BoundAttributeDescriptor descriptorX, BoundAttributeDescriptor descriptorY)
         {
             if (descriptorX == descriptorY)
             {
@@ -38,7 +38,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
                     descriptorY.DesignTimeDescriptor);
         }
 
-        public int GetHashCode(TagHelperAttributeDescriptor descriptor)
+        public int GetHashCode(BoundAttributeDescriptor descriptor)
         {
             var hashCodeCombiner = HashCodeCombiner.Start();
             hashCodeCombiner.Add(descriptor.IsIndexer);
