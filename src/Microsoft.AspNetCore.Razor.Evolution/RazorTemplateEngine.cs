@@ -35,14 +35,28 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         /// </summary>
         public RazorProject Project { get; }
 
+        /// <summary>
+        /// Default set of options for <see cref="RazorTemplateEngine"/>.
+        /// </summary>
+        public static RazorTemplateEngineOptions DefaultOptions { get; } =
+            new RazorTemplateEngineOptions(string.Empty, defaultImports: null);
+
+        /// <summary>
+        /// Parses the template specified by the project item <paramref name="path"/>.
+        /// </summary>
+        /// <param name="path">The template path.</param>
+        /// <returns>The <see cref="RazorTemplateEngineResult"/>.</returns>
         public RazorTemplateEngineResult GenerateCode(string path)
         {
-            return GenerateCode(path, RazorTemplateEngineOptions.Default);
+            return GenerateCode(path, DefaultOptions);
         }
 
         /// <summary>
         /// Parses the template specified by the project item <paramref name="path"/>.
         /// </summary>
+        /// <param name="path">The template path.</param>
+        /// <param name="options">The <see cref="RazorTemplateEngineOptions"/>.</param>
+        /// <returns>The <see cref="RazorTemplateEngineResult"/>.</returns>
         public RazorTemplateEngineResult GenerateCode(string path, RazorTemplateEngineOptions options)
         {
             if (string.IsNullOrEmpty(path))
@@ -56,9 +70,30 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             }
 
             var projectItem = Project.GetItem(path);
+            return GnerateCode(projectItem, options);
+        }
+
+        /// <summary>
+        /// Parses the template specified by <paramref name="projectItem"/>.
+        /// </summary>
+        /// <param name="projectItem">The <see cref="RazorProjectItem"/>.</param>
+        /// <param name="options">The <see cref="RazorTemplateEngineOptions"/>.</param>
+        /// <returns>The <see cref="RazorTemplateEngineResult"/>.</returns>
+        public RazorTemplateEngineResult GnerateCode(RazorProjectItem projectItem, RazorTemplateEngineOptions options)
+        {
+            if (projectItem == null)
+            {
+                throw new ArgumentNullException(nameof(projectItem));
+            }
+
+            if (options == null)
+            {
+                throw new ArgumentNullException(nameof(options));
+            }
+
             if (!projectItem.Exists)
             {
-                throw new InvalidOperationException(Resources.FormatRazorTemplateEngine_ItemCouldNotBeFound(path));
+                throw new InvalidOperationException(Resources.FormatRazorTemplateEngine_ItemCouldNotBeFound(projectItem.Path));
             }
 
             var codeDocument = CreateCodeDocument(projectItem, options);
@@ -73,7 +108,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         /// <param name="projectItem">The <see cref="RazorProjectItem"/>.</param>
         /// <param name="options">The <see cref="RazorTemplateEngineOptions"/>.</param>
         /// <returns>The created <see cref="RazorCodeDocument"/>.</returns>
-        protected virtual RazorCodeDocument CreateCodeDocument(
+        public virtual RazorCodeDocument CreateCodeDocument(
             RazorProjectItem projectItem,
             RazorTemplateEngineOptions options)
         {
@@ -87,7 +122,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                 throw new ArgumentNullException(nameof(options));
             }
 
-            var source = CreateSourceDocument(projectItem);
+            var source = RazorSourceDocument.ReadFrom(projectItem);
             var imports = GetImports(projectItem, options);
 
             return RazorCodeDocument.Create(source, imports);
@@ -98,7 +133,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         /// </summary>
         /// <param name="codeDocument">The <see cref="RazorCodeDocument"/>.</param>
         /// <returns>The created <see cref="RazorCSharpDocument"/>.</returns>
-        protected virtual RazorCSharpDocument CreateCSharpDocument(RazorCodeDocument codeDocument)
+        public virtual RazorCSharpDocument CreateCSharpDocument(RazorCodeDocument codeDocument)
         {
             if (codeDocument == null)
             {
@@ -110,39 +145,12 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         }
 
         /// <summary>
-        /// Creates a <see cref="RazorSourceDocument"/>.
-        /// </summary>
-        /// <param name="projectItem">The <see cref="RazorProjectItem"/> to produce the document for.</param>
-        /// <returns>The <see cref="RazorSourceDocument"/>.</returns>
-        protected virtual RazorSourceDocument CreateSourceDocument(RazorProjectItem projectItem)
-        {
-            if (projectItem == null)
-            {
-                throw new ArgumentNullException(nameof(projectItem));
-            }
-
-            var path = projectItem.PhysicalPath;
-            if (string.IsNullOrEmpty(path))
-            {
-                path = projectItem.Path;
-            }
-
-            RazorSourceDocument source;
-            using (var inputStream = projectItem.Read())
-            {
-                source = RazorSourceDocument.ReadFrom(inputStream, path);
-            }
-
-            return source;
-        }
-
-        /// <summary>
         /// Gets <see cref="RazorSourceDocument"/> that are applicable to the specified <paramref name="projectItem"/>.
         /// </summary>
         /// <param name="projectItem">The <see cref="RazorProjectItem"/>.</param>
         /// <param name="options">The <see cref="RazorTemplateEngineOptions"/>.</param>
         /// <returns></returns>
-        protected virtual IEnumerable<RazorSourceDocument> GetImports(
+        public virtual IEnumerable<RazorSourceDocument> GetImports(
             RazorProjectItem projectItem,
             RazorTemplateEngineOptions options)
         {
@@ -174,7 +182,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                 if (importItem.Exists)
                 {
                     // We want items in descending order. FindHierarchicalItems returns items in ascending order.
-                    result.Insert(0, CreateSourceDocument(importItem));
+                    result.Insert(0, RazorSourceDocument.ReadFrom(importItem));
                 }
             }
 

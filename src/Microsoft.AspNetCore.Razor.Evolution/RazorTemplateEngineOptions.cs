@@ -20,12 +20,6 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         }
 
         /// <summary>
-        /// Default set of options for <see cref="RazorTemplateEngine"/>.
-        /// </summary>
-        public static RazorTemplateEngineOptions Default { get; } =
-            new RazorTemplateEngineOptions(string.Empty, defaultImports: null);
-
-        /// <summary>
         /// Gets the file name of the imports file (e.g. _ViewImports.cshtml).
         /// </summary>
         public string ImportsFileName { get; }
