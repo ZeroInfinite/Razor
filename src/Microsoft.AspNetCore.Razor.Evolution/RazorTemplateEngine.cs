@@ -12,6 +12,8 @@ namespace Microsoft.AspNetCore.Razor.Evolution
     /// </summary>
     public class RazorTemplateEngine
     {
+        private RazorTemplateEngineOptions _options;
+
         /// <summary>
         /// Initializes a new instance of <see cref="RazorTemplateEngine"/>.
         /// </summary>
@@ -21,8 +23,9 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             RazorEngine engine,
             RazorProject project)
         {
-            Engine = engine;
-            Project = project;
+            Engine = engine ?? throw new ArgumentNullException(nameof(engine));
+            Project = project ?? throw new ArgumentNullException(nameof(project));
+            _options = new RazorTemplateEngineOptions();
         }
 
         /// <summary>
@@ -36,59 +39,46 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         public RazorProject Project { get; }
 
         /// <summary>
-        /// Default set of options for <see cref="RazorTemplateEngine"/>.
+        /// Options to configure <see cref="RazorTemplateEngine"/>.
         /// </summary>
-        public static RazorTemplateEngineOptions DefaultOptions { get; } =
-            new RazorTemplateEngineOptions(string.Empty, defaultImports: null);
-
-        /// <summary>
-        /// Parses the template specified by the project item <paramref name="path"/>.
-        /// </summary>
-        /// <param name="path">The template path.</param>
-        /// <returns>The <see cref="RazorTemplateEngineResult"/>.</returns>
-        public RazorTemplateEngineResult GenerateCode(string path)
+        public RazorTemplateEngineOptions Options
         {
-            return GenerateCode(path, DefaultOptions);
+            get
+            {
+                return _options;
+            }
+            set
+            {
+                _options = value ?? throw new ArgumentNullException(nameof(value));
+            }
         }
 
         /// <summary>
         /// Parses the template specified by the project item <paramref name="path"/>.
         /// </summary>
         /// <param name="path">The template path.</param>
-        /// <param name="options">The <see cref="RazorTemplateEngineOptions"/>.</param>
-        /// <returns>The <see cref="RazorTemplateEngineResult"/>.</returns>
-        public RazorTemplateEngineResult GenerateCode(string path, RazorTemplateEngineOptions options)
+        /// <returns>The <see cref="RazorCodeDocument"/>.</returns>
+        public RazorCodeDocument GenerateCode(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
                 throw new ArgumentException(Resources.ArgumentCannotBeNullOrEmpty, nameof(path));
             }
 
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
-
             var projectItem = Project.GetItem(path);
-            return GnerateCode(projectItem, options);
+            return GenerateCode(projectItem);
         }
 
         /// <summary>
         /// Parses the template specified by <paramref name="projectItem"/>.
         /// </summary>
         /// <param name="projectItem">The <see cref="RazorProjectItem"/>.</param>
-        /// <param name="options">The <see cref="RazorTemplateEngineOptions"/>.</param>
-        /// <returns>The <see cref="RazorTemplateEngineResult"/>.</returns>
-        public RazorTemplateEngineResult GnerateCode(RazorProjectItem projectItem, RazorTemplateEngineOptions options)
+        /// <returns>The <see cref="RazorCodeDocument"/>.</returns>
+        public RazorCodeDocument GenerateCode(RazorProjectItem projectItem)
         {
             if (projectItem == null)
             {
                 throw new ArgumentNullException(nameof(projectItem));
-            }
-
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
             }
 
             if (!projectItem.Exists)
@@ -96,34 +86,26 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                 throw new InvalidOperationException(Resources.FormatRazorTemplateEngine_ItemCouldNotBeFound(projectItem.Path));
             }
 
-            var codeDocument = CreateCodeDocument(projectItem, options);
-            var csharpDocument = CreateCSharpDocument(codeDocument);
+            var codeDocument = CreateCodeDocument(projectItem);
+            CreateCSharpDocument(codeDocument);
 
-            return new RazorTemplateEngineResult(projectItem, codeDocument, csharpDocument);
+            return codeDocument;
         }
 
         /// <summary>
         /// Generates a <see cref="RazorCodeDocument"/> for the specified <paramref name="projectItem"/>.
         /// </summary>
         /// <param name="projectItem">The <see cref="RazorProjectItem"/>.</param>
-        /// <param name="options">The <see cref="RazorTemplateEngineOptions"/>.</param>
         /// <returns>The created <see cref="RazorCodeDocument"/>.</returns>
-        public virtual RazorCodeDocument CreateCodeDocument(
-            RazorProjectItem projectItem,
-            RazorTemplateEngineOptions options)
+        public virtual RazorCodeDocument CreateCodeDocument(RazorProjectItem projectItem)
         {
             if (projectItem == null)
             {
                 throw new ArgumentNullException(nameof(projectItem));
             }
 
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
-
             var source = RazorSourceDocument.ReadFrom(projectItem);
-            var imports = GetImports(projectItem, options);
+            var imports = GetImports(projectItem);
 
             return RazorCodeDocument.Create(source, imports);
         }
@@ -148,34 +130,21 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         /// Gets <see cref="RazorSourceDocument"/> that are applicable to the specified <paramref name="projectItem"/>.
         /// </summary>
         /// <param name="projectItem">The <see cref="RazorProjectItem"/>.</param>
-        /// <param name="options">The <see cref="RazorTemplateEngineOptions"/>.</param>
         /// <returns></returns>
-        public virtual IEnumerable<RazorSourceDocument> GetImports(
-            RazorProjectItem projectItem,
-            RazorTemplateEngineOptions options)
+        public virtual IEnumerable<RazorSourceDocument> GetImports(RazorProjectItem projectItem)
         {
             if (projectItem == null)
             {
                 throw new ArgumentNullException(nameof(projectItem));
             }
 
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
-
-            var importsFileName = options.ImportsFileName;
+            var importsFileName = Options.ImportsFileName;
             if (string.IsNullOrEmpty(importsFileName))
             {
                 return Enumerable.Empty<RazorSourceDocument>();
             }
 
             var result = new List<RazorSourceDocument>();
-            if (options.DefaultImports != null)
-            {
-                result.Add(options.DefaultImports);
-            }
-
             var importProjectItems = Project.FindHierarchicalItems(projectItem.Path, importsFileName);
             foreach (var importItem in importProjectItems)
             {
@@ -184,6 +153,11 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                     // We want items in descending order. FindHierarchicalItems returns items in ascending order.
                     result.Insert(0, RazorSourceDocument.ReadFrom(importItem));
                 }
+            }
+
+            if (Options.DefaultImports != null)
+            {
+                result.Insert(0, Options.DefaultImports);
             }
 
             return result;

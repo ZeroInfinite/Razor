@@ -9,24 +9,13 @@ namespace Microsoft.AspNetCore.Razor.Evolution
     public class RazorTemplateEngineOptions
     {
         /// <summary>
-        /// Initializes a new instance of <see cref="RazorTemplateEngineOptions"/>.
+        /// Gets or sets the file name of the imports file (e.g. _ViewImports.cshtml).
         /// </summary>
-        /// <param name="importsFileName">The file name of the imports (e.g. _ViewImports.cshtml).</param>
-        /// <param name="defaultImports">The default set of imports.</param>
-        public RazorTemplateEngineOptions(string importsFileName, RazorSourceDocument defaultImports)
-        {
-            ImportsFileName = importsFileName;
-            DefaultImports = defaultImports;
-        }
+        public string ImportsFileName { get; set; }
 
         /// <summary>
-        /// Gets the file name of the imports file (e.g. _ViewImports.cshtml).
+        /// Gets or sets the default set of imports.
         /// </summary>
-        public string ImportsFileName { get; }
-
-        /// <summary>
-        /// Gets the default set of imports.
-        /// </summary>
-        public RazorSourceDocument DefaultImports { get; }
+        public RazorSourceDocument DefaultImports { get; set; }
     }
 }

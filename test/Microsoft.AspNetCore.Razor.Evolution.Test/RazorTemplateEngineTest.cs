@@ -2,16 +2,13 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using Microsoft.AspNetCore.Razor.Evolution.IntegrationTests;
+using Microsoft.AspNetCore.Testing;
 using Xunit;
 
 namespace Microsoft.AspNetCore.Razor.Evolution
 {
-    public class RazorTemplateEngineTest : IntegrationTestBase
+    public class RazorTemplateEngineTest
     {
         [Fact]
         public void GenerateCode_ThrowsIfItemCannotBeFound()
@@ -28,77 +25,72 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         }
 
         [Fact]
-        public void GenerateCodeWithDefaults()
+        public void SettingOptions_ThrowsIfValueIsNull()
         {
             // Arrange
-            var filePath = Path.Combine(TestProjectRoot, $"{Filename}.cshtml");
-            var content = File.ReadAllText(filePath);
-            var projectItem = new TestRazorProjectItem($"{Filename}.cshtml", "", content);
-            var project = new TestRazorProject(new[] { projectItem });
-            var razorEngine = RazorEngine.Create(c => c.WithDefaultConfiguration());
+            var project = new TestRazorProject(new RazorProjectItem[] { });
+            var razorEngine = RazorEngine.Create();
             var templateEngine = new RazorTemplateEngine(razorEngine, project);
 
+            // Act & Assert
+            ExceptionAssert.ThrowsArgumentNull(
+                () => templateEngine.Options = null,
+                "value");
+        }
+
+        [Fact]
+        public void CreateCodeDocument_IncludesImportsIfFileIsPresent()
+        {
+            // Arrange
+            var projectItem = new TestRazorProjectItem("/Views/Home/Index.cshtml");
+            var import1 = new TestRazorProjectItem("/MyImport.cshtml");
+            var import2 = new TestRazorProjectItem("/Views/Home/MyImport.cshtml");
+            var project = new TestRazorProject(new[] { import1, import2, projectItem });
+            var razorEngine = RazorEngine.Create();
+            var templateEngine = new RazorTemplateEngine(razorEngine, project)
+            {
+                Options =
+                {
+                    ImportsFileName = "MyImport.cshtml",
+                }
+            };
+
             // Act
-            var result = templateEngine.GenerateCode(projectItem.Path);
+            var codeDocument = templateEngine.CreateCodeDocument(projectItem);
 
             // Assert
-            Assert.Same(projectItem, result.ProjectItem);
-            Assert.NotNull(result.CodeDocument);
-            AssertCSharpDocumentMatchesBaseline(result.CSharpDocument);
+            Assert.Collection(codeDocument.Imports,
+                import => Assert.Equal("/MyImport.cshtml", import.Filename),
+                import => Assert.Equal("/Views/Home/MyImport.cshtml", import.Filename));
         }
 
-        private class TestRazorProject : RazorProject
+        [Fact]
+        public void CreateCodeDocument_IncludesDefaultImportIfNotNull()
         {
-            private readonly IDictionary<string, RazorProjectItem> _lookup;
-
-            public TestRazorProject(IList<RazorProjectItem> items)
+            // Arrange
+            var projectItem = new TestRazorProjectItem("/Views/Home/Index.cshtml");
+            var import1 = new TestRazorProjectItem("/MyImport.cshtml");
+            var import2 = new TestRazorProjectItem("/Views/Home/MyImport.cshtml");
+            var project = new TestRazorProject(new[] { import1, import2, projectItem });
+            var razorEngine = RazorEngine.Create();
+            var defaultImport = RazorSourceDocument.ReadFrom(new MemoryStream(), "Default.cshtml");
+            var templateEngine = new RazorTemplateEngine(razorEngine, project)
             {
-                _lookup = items.ToDictionary(item => item.Path);
-            }
-
-            public override IEnumerable<RazorProjectItem> EnumerateItems(string basePath)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override RazorProjectItem GetItem(string path)
-            {
-                if (!_lookup.TryGetValue(path, out var value))
+                Options =
                 {
-                    value = new NotFoundProjectItem("", path);
+                    ImportsFileName = "MyImport.cshtml",
+                    DefaultImports = defaultImport,
                 }
+            };
 
-                return value;
-            }
-        }
+            // Act
+            var codeDocument = templateEngine.CreateCodeDocument(projectItem);
 
-        private class TestRazorProjectItem : RazorProjectItem
-        {
-            private string _path;
-            private string _physicalPath;
-            private readonly string _content;
-
-            public TestRazorProjectItem(string path, string physicalPath, string content)
-            {
-                _path = path;
-                _physicalPath = physicalPath;
-                _content = content;
-            }
-
-            public override string BasePath => throw new NotImplementedException();
-
-            public override string Path => _path;
-
-            public void SetPath(string path) => _path = path;
-
-            public override string PhysicalPath => _physicalPath;
-
-            public override bool Exists => true;
-
-            public override Stream Read()
-            {
-                return new MemoryStream(Encoding.UTF8.GetBytes(_content));
-            }
+            // Assert
+            Assert.Collection(codeDocument.Imports,
+                import => Assert.Same(defaultImport, import),
+                import => Assert.Equal("/MyImport.cshtml", import.Filename),
+                import => Assert.Equal("/Views/Home/MyImport.cshtml", import.Filename));
         }
     }
 }

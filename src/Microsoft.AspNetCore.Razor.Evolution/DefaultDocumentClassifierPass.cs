@@ -23,26 +23,25 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             ClassDeclarationIRNode @class,
             RazorMethodDeclarationIRNode method)
         {
-            base.OnDocumentStructureCreated(codeDocument, @namespace, @class, method);
-            var configuration = Engine.Features.OfType<RazorEngineConfigurationFeature>().FirstOrDefault();
+            var configuration = Engine.Features.OfType<DefaultDocumentClassifierPassFeature>().FirstOrDefault();
             if (configuration != null)
             {
                 for (var i = 0; i < configuration.ConfigureClass.Count; i++)
                 {
                     var configureClass = configuration.ConfigureClass[i];
-                    configureClass(@class);
+                    configureClass(codeDocument, @class);
                 }
 
                 for (var i = 0; i < configuration.ConfigureNamespace.Count; i++)
                 {
                     var configureNamespace = configuration.ConfigureNamespace[i];
-                    configureNamespace(@namespace);
+                    configureNamespace(codeDocument, @namespace);
                 }
 
                 for (var i = 0; i < configuration.ConfigureMethod.Count; i++)
                 {
                     var configureMethod = configuration.ConfigureMethod[i];
-                    configureMethod(@method);
+                    configureMethod(codeDocument, @method);
                 }
             }
         }

@@ -3,7 +3,6 @@
 
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Razor.Evolution.CodeGeneration;
 
 namespace Microsoft.AspNetCore.Razor.Evolution
@@ -46,45 +45,15 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             return builder;
         }
 
-        public static IRazorEngineBuilder WithBaseType(this IRazorEngineBuilder builder, string baseType)
+        public static IRazorEngineBuilder SetBaseType(this IRazorEngineBuilder builder, string baseType)
         {
             if (builder == null)
             {
                 throw new ArgumentNullException(nameof(builder));
             }
 
-            var configurationFeature = GetConfigurationFeature(builder);
-            configurationFeature.ConfigureClass.Add(@class => { @class.BaseType = baseType; });
-            return builder;
-        }
-
-        public static IRazorEngineBuilder WithDefaultConfiguration(this IRazorEngineBuilder builder)
-        {
-            if (builder == null)
-            {
-                throw new ArgumentNullException(nameof(builder));
-            }
-
-            var configurationFeature = GetConfigurationFeature(builder);
-            configurationFeature.ConfigureClass.Add(@class =>
-            {
-                @class.Name = "Template";
-                @class.AccessModifier = "public";
-            });
-
-            configurationFeature.ConfigureNamespace.Add(@namespace =>
-            {
-                @namespace.Content = "Razor";
-            });
-
-            configurationFeature.ConfigureMethod.Add(@method =>
-            {
-                @method.Name = "ExecuteAsync";
-                @method.ReturnType = $"global::{typeof(Task).FullName}";
-                @method.AccessModifier = "public";
-                method.Modifiers = new[] { "async", "override" };
-            });
-
+            var configurationFeature = GetDefaultDocumentClassifierPassFeature(builder);
+            configurationFeature.ConfigureClass.Add((document, @class) => @class.BaseType = baseType);
             return builder;
         }
 
@@ -112,12 +81,12 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             return targetExtensionFeature;
         }
 
-        private static RazorEngineConfigurationFeature GetConfigurationFeature(IRazorEngineBuilder builder)
+        private static DefaultDocumentClassifierPassFeature GetDefaultDocumentClassifierPassFeature(IRazorEngineBuilder builder)
         {
-            var configurationFeature = builder.Features.OfType<RazorEngineConfigurationFeature>().FirstOrDefault();
+            var configurationFeature = builder.Features.OfType<DefaultDocumentClassifierPassFeature>().FirstOrDefault();
             if (configurationFeature == null)
             {
-                configurationFeature = new RazorEngineConfigurationFeature();
+                configurationFeature = new DefaultDocumentClassifierPassFeature();
                 builder.Features.Add(configurationFeature);
             }
 
