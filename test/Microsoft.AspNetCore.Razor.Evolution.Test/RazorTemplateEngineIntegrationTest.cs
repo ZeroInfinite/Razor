@@ -24,12 +24,10 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             var templateEngine = new RazorTemplateEngine(razorEngine, project);
 
             // Act
-            var result = templateEngine.GenerateCode(projectItem.Path);
+            var resultcSharpDocument = templateEngine.GenerateCode(projectItem.Path);
 
             // Assert
-            Assert.NotNull(result);
-            var cSharpDocument = result.GetCSharpDocument();
-            AssertCSharpDocumentMatchesBaseline(cSharpDocument);
+            AssertCSharpDocumentMatchesBaseline(resultcSharpDocument);
         }
 
         [Fact]
@@ -49,11 +47,9 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             var templateEngine = new RazorTemplateEngine(razorEngine, project);
 
             // Act
-            var result = templateEngine.GenerateCode(projectItem.Path);
+            var cSharpDocument = templateEngine.GenerateCode(projectItem.Path);
 
             // Assert
-            Assert.NotNull(result);
-            var cSharpDocument = result.GetCSharpDocument();
             AssertCSharpDocumentMatchesBaseline(cSharpDocument);
         }
     }

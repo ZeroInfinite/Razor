@@ -57,8 +57,8 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         /// Parses the template specified by the project item <paramref name="path"/>.
         /// </summary>
         /// <param name="path">The template path.</param>
-        /// <returns>The <see cref="RazorCodeDocument"/>.</returns>
-        public RazorCodeDocument GenerateCode(string path)
+        /// <returns>The <see cref="RazorCSharpDocument"/>.</returns>
+        public RazorCSharpDocument GenerateCode(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
@@ -73,8 +73,8 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         /// Parses the template specified by <paramref name="projectItem"/>.
         /// </summary>
         /// <param name="projectItem">The <see cref="RazorProjectItem"/>.</param>
-        /// <returns>The <see cref="RazorCodeDocument"/>.</returns>
-        public RazorCodeDocument GenerateCode(RazorProjectItem projectItem)
+        /// <returns>The <see cref="RazorCSharpDocument"/>.</returns>
+        public RazorCSharpDocument GenerateCode(RazorProjectItem projectItem)
         {
             if (projectItem == null)
             {
@@ -87,9 +87,39 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             }
 
             var codeDocument = CreateCodeDocument(projectItem);
-            CreateCSharpDocument(codeDocument);
+            return GenerateCode(codeDocument);
+        }
 
-            return codeDocument;
+        /// <summary>
+        /// Parses the template specified by <paramref name="codeDocument"/>.
+        /// </summary>
+        /// <param name="codeDocument">The <see cref="RazorProjectItem"/>.</param>
+        /// <returns>The <see cref="RazorCSharpDocument"/>.</returns>
+        public virtual RazorCSharpDocument GenerateCode(RazorCodeDocument codeDocument)
+        {
+            if (codeDocument == null)
+            {
+                throw new ArgumentNullException(nameof(codeDocument));
+            }
+
+            Engine.Process(codeDocument);
+            return codeDocument.GetCSharpDocument();
+        }
+
+        /// <summary>
+        /// Generates a <see cref="RazorCodeDocument"/> for the specified <paramref name="path"/>.
+        /// </summary>
+        /// <param name="path">The template path.</param>
+        /// <returns>The created <see cref="RazorCodeDocument"/>.</returns>
+        public virtual RazorCodeDocument CreateCodeDocument(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                throw new ArgumentException(Resources.ArgumentCannotBeNullOrEmpty, nameof(path));
+            }
+
+            var projectItem = Project.GetItem(path);
+            return CreateCodeDocument(projectItem);
         }
 
         /// <summary>
@@ -104,6 +134,11 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                 throw new ArgumentNullException(nameof(projectItem));
             }
 
+            if (!projectItem.Exists)
+            {
+                throw new InvalidOperationException(Resources.FormatRazorTemplateEngine_ItemCouldNotBeFound(projectItem.Path));
+            }
+
             var source = RazorSourceDocument.ReadFrom(projectItem);
             var imports = GetImports(projectItem);
 
@@ -111,31 +146,36 @@ namespace Microsoft.AspNetCore.Razor.Evolution
         }
 
         /// <summary>
-        /// Processes the <paramref name="codeDocument"/> to produce a <see cref="RazorCSharpDocument"/>.
+        /// Gets <see cref="RazorSourceDocument"/> that are applicable to the specified <paramref name="path"/>.
         /// </summary>
-        /// <param name="codeDocument">The <see cref="RazorCodeDocument"/>.</param>
-        /// <returns>The created <see cref="RazorCSharpDocument"/>.</returns>
-        public virtual RazorCSharpDocument CreateCSharpDocument(RazorCodeDocument codeDocument)
+        /// <param name="path">The template path.</param>
+        /// <returns>The sequence of applicable <see cref="RazorSourceDocument"/>.</returns>
+        public IEnumerable<RazorSourceDocument> GetImports(string path)
         {
-            if (codeDocument == null)
+            if (string.IsNullOrEmpty(path))
             {
-                throw new ArgumentNullException(nameof(codeDocument));
+                throw new ArgumentException(Resources.ArgumentCannotBeNullOrEmpty, nameof(path));
             }
 
-            Engine.Process(codeDocument);
-            return codeDocument.GetCSharpDocument();
+            var projectItem = Project.GetItem(path);
+            return GetImports(projectItem);
         }
 
         /// <summary>
         /// Gets <see cref="RazorSourceDocument"/> that are applicable to the specified <paramref name="projectItem"/>.
         /// </summary>
         /// <param name="projectItem">The <see cref="RazorProjectItem"/>.</param>
-        /// <returns></returns>
+        /// <returns>The sequence of applicable <see cref="RazorSourceDocument"/>.</returns>
         public virtual IEnumerable<RazorSourceDocument> GetImports(RazorProjectItem projectItem)
         {
             if (projectItem == null)
             {
                 throw new ArgumentNullException(nameof(projectItem));
+            }
+
+            if (!projectItem.Exists)
+            {
+                throw new InvalidOperationException(Resources.FormatRazorTemplateEngine_ItemCouldNotBeFound(projectItem.Path));
             }
 
             var importsFileName = Options.ImportsFileName;
