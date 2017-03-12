@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Razor.Evolution.CodeGeneration;
 using Microsoft.AspNetCore.Razor.Evolution.Intermediate;
 using Microsoft.AspNetCore.Razor.Evolution.Legacy;
@@ -56,16 +55,18 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                 renderingContext.IdGenerator = () => idValue.ToString();
             }
 
-            var renderer = target.CreateRenderer(renderingContext);
-            renderingContext.RenderChildren = renderer.VisitDefault;
-
-            renderer.VisitDocument(irDocument);
+            var documentWriter = target.CreateWriter(renderingContext);
+            documentWriter.WriteDocument(irDocument);
 
             var diagnostics = new List<RazorDiagnostic>();
             diagnostics.AddRange(syntaxTree.Diagnostics);
 
-            // Temporary code while we're still using legacy diagnostics in the SyntaxTree.
-            diagnostics.AddRange(renderingContext.ErrorSink.Errors.Select(error => RazorDiagnostic.Create(error)));
+            var importSyntaxTrees = codeDocument.GetImportSyntaxTrees();
+            for (var i = 0; i < importSyntaxTrees?.Count; i++)
+            {
+                diagnostics.AddRange(importSyntaxTrees[i].Diagnostics);
+            }
+            diagnostics.AddRange(renderingContext.Diagnostics);
 
             var csharpDocument = new RazorCSharpDocument()
             {

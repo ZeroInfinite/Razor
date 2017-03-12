@@ -8,19 +8,19 @@ using Microsoft.AspNetCore.Razor.Evolution.Intermediate;
 
 namespace Microsoft.AspNetCore.Razor.Evolution.CodeGeneration
 {
-    internal class CSharpRenderingContext
+    public class CSharpRenderingContext
     {
         private CSharpRenderingConventions _renderingConventions;
 
-        public ICollection<DirectiveDescriptor> Directives { get; set; }
+        internal ICollection<DirectiveDescriptor> Directives { get; set; }
 
-        public Func<string> IdGenerator { get; set; } = () => Guid.NewGuid().ToString("N");
+        internal Func<string> IdGenerator { get; set; } = () => Guid.NewGuid().ToString("N");
 
-        public List<LineMapping> LineMappings { get; } = new List<LineMapping>();
+        internal List<LineMapping> LineMappings { get; } = new List<LineMapping>();
 
         public CSharpCodeWriter Writer { get; set; }
 
-        public CSharpRenderingConventions RenderingConventions
+        internal CSharpRenderingConventions RenderingConventions
         {
             get
             {
@@ -37,14 +37,113 @@ namespace Microsoft.AspNetCore.Razor.Evolution.CodeGeneration
             }
         }
 
-        public ErrorSink ErrorSink { get; } = new ErrorSink();
+        internal IList<RazorDiagnostic> Diagnostics { get; } = new List<RazorDiagnostic>();
 
-        public RazorSourceDocument SourceDocument { get; set; }
+        internal RazorSourceDocument SourceDocument { get; set; }
 
-        public RazorParserOptions Options { get; set; }
+        internal RazorParserOptions Options { get; set; }
 
-        public TagHelperRenderingContext TagHelperRenderingContext { get; set; }
+        internal TagHelperRenderingContext TagHelperRenderingContext { get; set; }
 
-        public Action<RazorIRNode> RenderChildren { get; set; }
+        internal Action<RazorIRNode> RenderChildren { get; set; }
+
+        internal Action<RazorIRNode> RenderNode { get; set; }
+
+        public BasicWriter BasicWriter { get; set; }
+
+        public TagHelperWriter TagHelperWriter { get; set; }
+
+        public void AddLineMappingFor(RazorIRNode node)
+        {
+            if (node.Source == null)
+            {
+                return;
+            }
+
+            var source = node.Source.Value;
+
+            var generatedLocation = new SourceSpan(Writer.GetCurrentSourceLocation(), source.Length);
+            var lineMapping = new LineMapping(source, generatedLocation);
+
+            LineMappings.Add(lineMapping);
+        }
+
+        public BasicWriterScope Push(BasicWriter writer)
+        {
+            if (writer == null)
+            {
+                throw new ArgumentNullException(nameof(writer));
+            }
+
+            var scope = new BasicWriterScope(this, BasicWriter);
+            BasicWriter = writer;
+            return scope;
+        }
+
+        public TagHelperWriterScope Push(TagHelperWriter writer)
+        {
+            if (writer == null)
+            {
+                throw new ArgumentNullException(nameof(writer));
+            }
+
+            var scope = new TagHelperWriterScope(this, BasicWriter);
+            TagHelperWriter = writer;
+            return scope;
+        }
+
+        public struct BasicWriterScope : IDisposable
+        {
+            private readonly CSharpRenderingContext _context;
+            private readonly BasicWriter _writer;
+
+            public BasicWriterScope(CSharpRenderingContext context, BasicWriter writer)
+            {
+                if (context == null)
+                {
+                    throw new ArgumentNullException(nameof(context));
+                }
+
+                if (writer == null)
+                {
+                    throw new ArgumentNullException(nameof(writer));
+                }
+
+                _context = context;
+                _writer = writer;
+            }
+
+            public void Dispose()
+            {
+                _context.BasicWriter = _writer;
+            }
+        }
+
+        public struct TagHelperWriterScope : IDisposable
+        {
+            private readonly CSharpRenderingContext _context;
+            private readonly BasicWriter _writer;
+
+            public TagHelperWriterScope(CSharpRenderingContext context, BasicWriter writer)
+            {
+                if (context == null)
+                {
+                    throw new ArgumentNullException(nameof(context));
+                }
+
+                if (writer == null)
+                {
+                    throw new ArgumentNullException(nameof(writer));
+                }
+
+                _context = context;
+                _writer = writer;
+            }
+
+            public void Dispose()
+            {
+                _context.BasicWriter = _writer;
+            }
+        }
     }
 }

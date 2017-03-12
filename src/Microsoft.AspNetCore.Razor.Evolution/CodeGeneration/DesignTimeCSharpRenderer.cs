@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using Microsoft.AspNetCore.Razor.Evolution.Intermediate;
+using Microsoft.AspNetCore.Razor.Evolution.Legacy;
 
 namespace Microsoft.AspNetCore.Razor.Evolution.CodeGeneration
 {
@@ -16,6 +17,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.CodeGeneration
 
         public override void VisitCSharpExpression(CSharpExpressionIRNode node)
         {
+            // We can't remove this yet, because it's still used recursively in a few places.
             if (node.Children.Count == 0)
             {
                 return;
@@ -23,9 +25,10 @@ namespace Microsoft.AspNetCore.Razor.Evolution.CodeGeneration
 
             if (node.Source != null)
             {
-                using (new LinePragmaWriter(Context.Writer, node.Source.Value))
+                using (Context.Writer.BuildLinePragma(node.Source.Value))
                 {
-                    var padding = BuildOffsetPadding(RazorDesignTimeIRPass.DesignTimeVariable.Length, node.Source.Value, Context);
+                    var offset = RazorDesignTimeIRPass.DesignTimeVariable.Length + " = ".Length;
+                    var padding = BuildOffsetPadding(offset, node.Source.Value, Context);
 
                     Context.Writer
                         .Write(padding)
@@ -61,7 +64,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.CodeGeneration
         {
             if (node.Source.HasValue)
             {
-                using (new LinePragmaWriter(Context.Writer, node.Source.Value))
+                using (Context.Writer.BuildLinePragma(node.Source.Value))
                 {
                     Context.Writer.WriteUsing(node.Content);
                 }
@@ -76,7 +79,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.CodeGeneration
         {
             if (node.Source != null)
             {
-                using (new LinePragmaWriter(Context.Writer, node.Source.Value))
+                using (Context.Writer.BuildLinePragma(node.Source.Value))
                 {
                     var padding = BuildOffsetPadding(0, node.Source.Value, Context);
                     Context.Writer.Write(padding);
@@ -229,7 +232,7 @@ namespace Microsoft.AspNetCore.Razor.Evolution.CodeGeneration
                 var firstMappedChild = node.Children.FirstOrDefault(child => child.Source != null) as RazorIRNode;
                 var valueStart = firstMappedChild?.Source;
 
-                using (new LinePragmaWriter(Context.Writer, node.Source.Value))
+                using (Context.Writer.BuildLinePragma(node.Source.Value))
                 {
                     var assignmentPrefixLength = propertyValueAccessor.Length + " = ".Length;
                     if (node.Descriptor.IsEnum &&
@@ -330,18 +333,20 @@ namespace Microsoft.AspNetCore.Razor.Evolution.CodeGeneration
             }
             else if (node is CSharpStatementIRNode)
             {
-                Context.ErrorSink.OnError(
-                    new SourceLocation(documentLocation.AbsoluteIndex, documentLocation.CharacterIndex, documentLocation.Length),
+                var error = new RazorError(
                     LegacyResources.TagHelpers_CodeBlocks_NotSupported_InAttributes,
+                    new SourceLocation(documentLocation.AbsoluteIndex, documentLocation.CharacterIndex, documentLocation.Length),
                     documentLocation.Length);
+                Context.Diagnostics.Add(RazorDiagnostic.Create(error));
             }
             else if (node is TemplateIRNode)
             {
                 var attributeValueNode = (SetTagHelperPropertyIRNode)node.Parent;
-                Context.ErrorSink.OnError(
-                    new SourceLocation(documentLocation.AbsoluteIndex, documentLocation.CharacterIndex, documentLocation.Length),
+                var error = new RazorError(
                     LegacyResources.FormatTagHelpers_InlineMarkupBlocks_NotSupported_InAttributes(attributeValueNode.Descriptor.TypeName),
+                    new SourceLocation(documentLocation.AbsoluteIndex, documentLocation.CharacterIndex, documentLocation.Length),
                     documentLocation.Length);
+                Context.Diagnostics.Add(RazorDiagnostic.Create(error));
             }
         }
     }

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using Microsoft.AspNetCore.Razor.Evolution.CodeGeneration;
 
 namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
 {
@@ -63,6 +64,66 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
         public new CSharpCodeWriter WriteLine()
         {
             return (CSharpCodeWriter)base.WriteLine();
+        }
+
+        public CSharpCodeWriter WritePadding(int offset, SourceSpan? span, CSharpRenderingContext context)
+        {
+            if (span == null)
+            {
+                return this;
+            }
+
+            var basePadding = CalculatePadding();
+            var resolvedPadding = Math.Max(basePadding - offset, 0);
+
+            if (context.Options.IsIndentingWithTabs)
+            {
+                // Avoid writing directly to the StringBuilder here, that will throw off the manual indexing 
+                // done by the base class.
+                var tabs = resolvedPadding / context.Options.TabSize;
+                for (var i = 0; i < tabs; i++)
+                {
+                    Write("\t");
+                }
+
+                var spaces = resolvedPadding % context.Options.TabSize;
+                for (var i = 0; i < spaces; i++)
+                {
+                    Write(" ");
+                }
+            }
+            else
+            {
+                for (var i = 0; i < resolvedPadding; i++)
+                {
+                    Write(" ");
+                }
+            }
+
+            return this;
+
+            int CalculatePadding()
+            {
+                var spaceCount = 0;
+                for (var i = span.Value.AbsoluteIndex - 1; i >= 0; i--)
+                {
+                    var @char = context.SourceDocument[i];
+                    if (@char == '\n' || @char == '\r')
+                    {
+                        break;
+                    }
+                    else if (@char == '\t')
+                    {
+                        spaceCount += context.Options.TabSize;
+                    }
+                    else
+                    {
+                        spaceCount++;
+                    }
+                }
+
+                return spaceCount;
+            }
         }
 
         public CSharpCodeWriter WriteVariableDeclaration(string type, string name, string value)
@@ -446,6 +507,11 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             return new CSharpCodeWritingScope(this);
         }
 
+        public IDisposable BuildLinePragma(SourceSpan documentLocation)
+        {
+            return new LinePragmaWriter(this, documentLocation);
+        }
+
         private void WriteVerbatimStringLiteral(string literal)
         {
             Write("@\"");
@@ -524,6 +590,47 @@ namespace Microsoft.AspNetCore.Razor.Evolution.Legacy
             Write(literal, start, literal.Length - start);
 
             Write("\"");
+        }
+
+        private class LinePragmaWriter : IDisposable
+        {
+            private readonly CSharpCodeWriter _writer;
+            private readonly int _startIndent;
+
+            public LinePragmaWriter(CSharpCodeWriter writer, SourceSpan documentLocation)
+            {
+                if (writer == null)
+                {
+                    throw new ArgumentNullException(nameof(writer));
+                }
+
+                _writer = writer;
+                _startIndent = _writer.CurrentIndent;
+                _writer.ResetIndent();
+                _writer.WriteLineNumberDirective(documentLocation, documentLocation.FilePath);
+            }
+
+            public void Dispose()
+            {
+                // Need to add an additional line at the end IF there wasn't one already written.
+                // This is needed to work with the C# editor's handling of #line ...
+                var builder = _writer.Builder;
+                var endsWithNewline = builder.Length > 0 && builder[builder.Length - 1] == '\n';
+
+                // Always write at least 1 empty line to potentially separate code from pragmas.
+                _writer.WriteLine();
+
+                // Check if the previous empty line wasn't enough to separate code from pragmas.
+                if (!endsWithNewline)
+                {
+                    _writer.WriteLine();
+                }
+
+                _writer
+                    .WriteLineDefaultDirective()
+                    .WriteLineHiddenDirective()
+                    .SetIndent(_startIndent);
+            }
         }
     }
 }

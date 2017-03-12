@@ -9,6 +9,8 @@ namespace Microsoft.AspNetCore.Razor.Evolution
 {
     public abstract class RazorSourceDocument
     {
+        private const int LargeObjectHeapLimitInChars = 40 * 1024; // 40K Unicode chars is 80KB which is less than the large object heap limit.
+
         internal static readonly RazorSourceDocument[] EmptyArray = new RazorSourceDocument[0];
 
         public abstract Encoding Encoding { get; }
@@ -48,6 +50,25 @@ namespace Microsoft.AspNetCore.Razor.Evolution
             return ReadFromInternal(stream, filename, encoding);
         }
 
+        public static RazorSourceDocument ReadFrom(RazorProjectItem projectItem)
+        {
+            if (projectItem == null)
+            {
+                throw new ArgumentNullException(nameof(projectItem));
+            }
+
+            var path = projectItem.PhysicalPath;
+            if (string.IsNullOrEmpty(path))
+            {
+                path = projectItem.Path;
+            }
+
+            using (var inputStream = projectItem.Read())
+            {
+                return ReadFrom(inputStream, path);
+            }
+        }
+
         private static RazorSourceDocument ReadFromInternal(Stream stream, string filename, Encoding encoding)
         {
             var streamLength = (int)stream.Length;
@@ -56,16 +77,18 @@ namespace Microsoft.AspNetCore.Razor.Evolution
 
             if (streamLength > 0)
             {
+                var bufferSize = Math.Min(streamLength, LargeObjectHeapLimitInChars);
+
                 var reader = new StreamReader(
                     stream,
                     contentEncoding,
                     detectEncodingFromByteOrderMarks: true,
-                    bufferSize: streamLength,
+                    bufferSize: bufferSize,
                     leaveOpen: true);
 
                 using (reader)
                 {
-                    content = reader.ReadToEnd();
+                    reader.Peek();      // Just to populate the encoding
 
                     if (encoding == null)
                     {
@@ -78,6 +101,18 @@ namespace Microsoft.AspNetCore.Razor.Evolution
                                 encoding.EncodingName,
                                 reader.CurrentEncoding.EncodingName));
                     }
+
+                    if (streamLength > LargeObjectHeapLimitInChars)
+                    {
+                        // If the resulting string would end up on the large object heap, then use LargeTextRazorSourceDocument.
+                        return new LargeTextRazorSourceDocument(
+                            reader,
+                            LargeObjectHeapLimitInChars,
+                            contentEncoding,
+                            filename);
+                    }
+
+                    content = reader.ReadToEnd();
                 }
             }
 
